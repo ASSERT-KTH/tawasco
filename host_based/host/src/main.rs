@@ -108,7 +108,7 @@ unsafe impl wasmtime::MemoryCreator for MemoryAllocator {
         // * WASM_PAGE_SIZE
         // To shrink the allocated memory for the binary just set the number below to 0.5 for example
         // TODO make this and option
-        let PSIZE: f32 = 0.03125;
+        let PSIZE: f32 = 1.0;
         let total_bytes = match maximum {
             Some(max) => (max as f32 *PSIZE) as usize,
             None => (minimum as f32*PSIZE) as usize,
@@ -138,12 +138,6 @@ unsafe impl wasmtime::MemoryCreator for MemoryAllocator {
         
         Ok(Box::new(linearmem))
     }
-}
-
-#[link(name = "valgrind")]
-extern "C" {
-    fn create_lock();
-    fn set_lock(val: u8);
 }
 
 #[no_mangle]
@@ -446,6 +440,17 @@ pub fn create_linker(engine: &wasmtime::Engine) -> wasmtime::Linker<wasmtime_was
                 unsafe {
                     exfiltrated.push(param as u8);
                 } */
+            },
+        )
+        .unwrap();
+
+        let linker = linker
+        .func_wrap(
+            "env",
+            "printint",
+            |_caller: wasmtime::Caller<'_, _>, param: i64| {
+                
+                println!("{}", param);
             },
         )
         .unwrap();

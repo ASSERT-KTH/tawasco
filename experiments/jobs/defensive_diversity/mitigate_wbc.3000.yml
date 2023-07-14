@@ -1,13 +1,3 @@
-# TODO
-# Try with 100 seeds for 10, 100, 1000, 2000, 10000 stacked variants = (5*100) binaries... then we can generalize
-
-# 1 - Generate the variants based on the number of stacked mutations
-# 2 - Execute the variants
-# 3 - Collect the BER records
-# 
-# After finding the best number of stacked, we can do a bisection on the number of stacked variants
-# Check if the variant is resilient after optimizing it with binaryen
-
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:

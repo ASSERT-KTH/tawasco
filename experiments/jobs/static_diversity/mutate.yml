@@ -4,7 +4,7 @@ metadata:
   generateName: wasm-mutate-1-
 spec:
   entrypoint: per-file
-  parallelism: 40
+  parallelism: 80
   templates:
   - name: per-file
     steps:
@@ -450,38 +450,44 @@ spec:
           none: {}
         s3:
           bucket: wasm-mutate
-          endpoint: minio-service.minio:3434
+          endpoint: 137.135.188.207:9000
           insecure: true
           # Avoid to mount the full metas_filtered folder in the container
-          key: "valid/no_input/{{inputs.parameters.file}}"
+          key: "/no_input/{{inputs.parameters.file}}"
           accessKeySecret:
-            name: argo-artifacts
+            name: argo-artifacts-extr
             key: accesskey
           secretKeySecret:
-            name: argo-artifacts
+            name: argo-artifacts-extr
             key: secretkey
     outputs:
       artifacts:
       - name: variants
-        path: /variants.zip
+        path: out/
         optional: true
         archive:
           none: {}
         s3:
           bucket: wasm-mutate
-          endpoint: minio-service.minio:3434
+          endpoint: 137.135.188.207:9000
           insecure: true
           # Avoid to mount the full metas_filtered folder in the container
-          key: "/variants/{{inputs.parameters.file}}/variants.zip"
+          key: "/variants_raw_1h/{{inputs.parameters.file}}/"
           accessKeySecret:
-            name: argo-artifacts
+            name: argo-artifacts-extr
             key: accesskey
           secretKeySecret:
-            name: argo-artifacts
+            name: argo-artifacts-extr
             key: secretkey
     script:
       image: jacarte/wm-image:latest
       command: [bash]
+      env:
+      - name: MINIOPASS  # name of env var
+        valueFrom:
+          secretKeyRef:
+            name: argo-artifacts-extr    # name of an existing k8s secret
+            key: secretkey     # 'key' subcomponent of the secret
       resources:
         requests:
           memory: "1G"
@@ -499,13 +505,14 @@ spec:
         export PATH=$PATH:$HOME/minio-binaries/
 
 
-        mc config host add exp http://minio-service.minio:3434 minio minio123
+        mc config host add exp http://137.135.188.207:9000 minio ${MINIOPASS}
         # check the output, if exist, then exit
-        if [[  $(mc ls "exp/wasm-mutate/variants/{{inputs.parameters.file}}/variants.zip" | wc -l) -gt 0 ]]
+        if [[  $(mc ls "exp/wasm-mutate/variants_raw_1h/{{inputs.parameters.file}}" | wc -l) -gt 3 ]]
         then
-            echo "Already exist. Skip"
+            echo "Already mutated skipping"
             # Check the number of oracles ?
-            # exit 0
+
+            exit 0
           
         fi
 
@@ -551,13 +558,14 @@ spec:
 
         # Compile to wasi-wasm
         mkdir -p out
+
+        bash download_wasi.sh
         wasi-sdk/bin/clang "/{{inputs.parameters.file}}" -Wl,--allow-undefined -o "out/{{inputs.parameters.file}}.wasm"
         ls .
 
 
         # Exit if node does not exist
         node --version || exit 1
-
 
 
         mkdir -p out
@@ -567,7 +575,9 @@ spec:
         ulimit -n
         ulimit -S
 
-        RUST_LOG=wasm_mutate=debug timeout --foreground 21600 stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.wasm" --seed $SEED --count 1000000 -v 1 --chaos-mode   --check-io 2> "out/log.txt"
+        TIME=3600
+        # TIME=10800
+        RUST_LOG=wasm_mutate=debug timeout --foreground $TIME stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.wasm" --seed $SEED --count 1000000 -v 1 --chaos-mode --variants-per-parent 4  --check-io 2> "out/log.txt"
         
         
         # Download the instantiation with node to collect the V8 bytecode
@@ -585,27 +595,28 @@ spec:
         # TODO Run the generation of wasm-opt here already, save error if crash  
         # Generate the V8 code as well, save error if crash
         echo "Running wasm-opt on $(ls /out/*.wasm | wc -l)"
-        find /out -name "*.wasm" -exec bash -c "wasm-opt {} -O4 --all-features  -o {}.opt 2>&1 > {}.opt.out && ls /out/*.opt* | wc -l" \;
+        # find /out -name "*.wasm" -exec bash -c "wasm-opt {} -O4 --all-features  -o {}.opt 2>&1 > {}.opt.out && ls /out/*.opt* | wc -l" \;
 
         # Now compile the opt to wat, to v8 and to cwasm as well
         # Generate the wasmtime mc code as well
         echo "Running wasmtime compile"
-        find /out -name "*.wasm" -exec  wasmtime compile {} --wasm-features all -o {}.cwasm \;
+        # find /out -name "*.wasm" -exec  wasmtime compile {} --wasm-features all -o {}.cwasm \;
         echo "Running wasmtime compile on opt code"
-        find /out -name "*.opt" -exec  wasmtime compile {}  --wasm-features all -o {}.cwasm_opt \;
+        # find /out -name "*.opt" -exec  wasmtime compile {}  --wasm-features all -o {}.cwasm_opt \;
         echo "Collecting V8 code "
-        find /out -name "*.wasm" -exec  bash -c "(rm /js/input.wasm || true) && cp -i {} /js/input.wasm && cd /js && node --print-code --no-liftoff index.js 2>&1 > code.v8.txt && cp code.v8.txt {}v8.txt" \;
+        # find /out -name "*.wasm" -exec  bash -c "(rm /js/input.wasm || true) && cp -i {} /js/input.wasm && cd /js && node --print-code --no-liftoff index.js 2>&1 > code.v8.txt && cp code.v8.txt {}v8.txt" \;
         echo "Collecting V8 code on opt code"
 
-        find /out -name "*.opt" -exec  bash -c "(rm /js/input.wasm || true) && cp -i {} /js/input.wasm && cd /js && node --print-code --no-liftoff index.js 2>&1 > code.v8.txt && cp code.v8.txt {}v8.txt" \;
+        # find /out -name "*.opt" -exec  bash -c "(rm /js/input.wasm || true) && cp -i {} /js/input.wasm && cd /js && node --print-code --no-liftoff index.js 2>&1 > code.v8.txt && cp code.v8.txt {}v8.txt" \;
 
         # Generate the wat code with offsets as well
         # The -p flag will add the offset to the file. This is a way to identify custom sections adding to the Wasm in textual format
         echo "Collecting Wats"
-        find /out -name "*.wasm" -exec  wasm-tools print -p {} -o {}.wat \;
-        find /out -name "*.opt" -exec  wasm-tools print -p {} -o {}.wat_opt \;
+        #find /out -name "*.wasm" -exec  wasm-tools print -p {} -o {}.wat \;
+        # find /out -name "*.opt" -exec  wasm-tools print -p {} -o {}.wat_opt \;
 
         du -h /out
         ls -la /out | wc -l
 
-        7z a  -tzip /variants.zip out/
+
+        # 7z a  -m0=lz5 -mx1 -mmt=10 /variants.zip out/

@@ -1,0 +1,1 @@
+//! Create a target that fuzz wasm-opt

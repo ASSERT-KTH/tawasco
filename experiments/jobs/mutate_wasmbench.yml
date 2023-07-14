@@ -1,0 +1,105 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: wasm-mutate-reallife-1-
+spec:
+  entrypoint: per-file
+  parallelism: 25
+  templates:
+  - name: per-file
+    steps:
+    - - name: select-file
+        template: wasm-mutate-template
+        arguments:
+          parameters:
+            - name: file
+              value: "{{ item.file }}"
+        withItems:
+          # TODO select only a few from wasmbench
+          # Filter out real life projects, opencv, tensorflow, sqlite, libsodium, etc
+          - { file: "Deconvolution-1D.c" }
+
+
+          # Add the others here
+
+  - name: wasm-mutate-template
+    activeDeadlineSeconds: 36000
+    retryStrategy:
+      limit: 4
+    inputs:
+
+      parameters:
+      - name: file
+      artifacts:
+      - name: data
+        path: "/original.wasm"
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "wasmbench/{{inputs.parameters.file}}"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
+    outputs:
+      artifacts:
+      - name: variants
+        path: /variants.zip
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "wasmbench/variants/{{inputs.parameters.file}}/variants.zip"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
+    script:
+      image: jacarte/ww:latest
+      command: [bash]
+      resources:
+        requests:
+          memory: "0"
+          cpu: 1.2
+      source: |
+
+        cd /
+        # Install 7z deps
+        apt-get update && apt-get install -y p7zip-full
+
+        # Insall wasm-tools
+        wget -O wasm-tools.gz https://github.com/bytecodealliance/wasm-tools/releases/download/wasm-tools-1.0.35/wasm-tools-1.0.35-x86_64-linux.tar.gz
+
+        # Extract wasm-tools
+        tar -xvf wasm-tools.gz
+        mv wasm-tools-1.0.35-x86_64-linux/* /usr/local/bin
+
+        ls -la /usr/local/bin
+        wasm-tools --version
+
+
+        # download the scripts from GIT
+
+        wget -O download_wasi_sdk.sh https://gist.githubusercontent.com/Jacarte/faa4002a8dc59d0282a4c6ee8474c4eb/raw/ddc53c132919326648710496e65da79268495dcb/download_wasi_sdk.sh
+
+        bash download_wasi_sdk.sh
+
+        wget -O mutate.py https://gist.githubusercontent.com/Jacarte/faa4002a8dc59d0282a4c6ee8474c4eb/raw/524c6a3d1a936ad5414864efdb9f0835346047ba/mutate.py
+
+        which wasm-tools
+
+        echo "WASM_MUTATE=/usr/local/bin/wasm-tools python3 mutate.py /{{inputs.parameters.file}}"
+
+        WASM_MUTATE="/usr/local/bin/wasm-tools mutate" python3 mutate.py "/{{inputs.parameters.file}}"
+        7z a  -tzip /variants.zip out/

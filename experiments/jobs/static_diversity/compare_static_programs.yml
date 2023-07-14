@@ -461,6 +461,22 @@ spec:
           secretKeySecret:
             name: argo-artifacts
             key: secretkey
+      - name: CROW_data
+        path: /crow.json
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "rq1/crow_original_rq1.json"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
     outputs:
       artifacts:
 
@@ -524,7 +540,8 @@ spec:
         
         with open("/summary.json", "w") as summary:
             json.dump(overall, summary)
-          
+        
+        
         # Do some plots here and save them as well
         # Programs distribution
         plt.hist(COUNTS, bins = len(set(COUNTS)))
@@ -532,9 +549,17 @@ spec:
         plt.ylabel("Number of programs")
         plt.savefig("/plots/rq1.variants_count.png", dpi=500)
 
+        original_crow = json.loads(open("/crow.json").read())
+        variants_crow = original_crow["CROW"]["projects"][0]["modules"][0]["functions"]
+        count_crow = [int(x["variants_count"]) for x in variants_crow]
+
         
         plt.clf()
-        plt.bar(list( list(range(len(COUNTS))), sorted(COUNTS, reverse=True)),width=0.5)
+        
+        
+        plt.bar([x - 0.2 for x in list(range(len(COUNTS)))], sorted(COUNTS, reverse=True),width=0.5)
+        plt.bar([x - 0.2 for x in list(range(len(count_crow)))], sorted(count_crow, reverse=True),width=0.5)
+
         plt.ylabel("Number of variants")
         plt.xlabel("Program")
         plt.xticks([])
@@ -547,7 +572,7 @@ spec:
   - name: wasm-mutate-template
     activeDeadlineSeconds: 3600
     retryStrategy:
-      limit: 1
+      limit: 0
     inputs:
 
       parameters:
@@ -555,6 +580,23 @@ spec:
       
     outputs:
       artifacts:
+      - name: db
+        path: "/{{inputs.parameters.file}}.db"
+        optional: true
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "rq1/db_raw/{{inputs.parameters.file}}.db"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
       - name: results
         path: /results.json
         optional: true
@@ -590,12 +632,11 @@ spec:
         mc config host add exp http://minio-service.minio:3434 minio minio123
 
         # Skip if the result file already exist
-        if [[  $(mc ls "exp/wasm-mutate/rq1/meta/{{inputs.parameters.file}}.json" | wc -l) -gt 0 ]]
+        if [[  $(mc ls "exp/wasm-mutate/rq1/db_raw/{{inputs.parameters.file}}.db" | wc -l) -gt 0 ]]
         then
             echo "Already exist. Skip"
             # Check the number of oracles ?
             exit 0
-          
         fi
 
         # Install 7z deps
@@ -603,10 +644,14 @@ spec:
 
 
         # download the scripts from GIT
+        pip3 install peewee blake3 pysqlite3 
 
+        wget -O schema.py https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/metrics/meta/schema.py
+        wget -O create_db.py https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/metrics/meta/create_db.py
+        wget -O check_db.py https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/metrics/meta/check_db.py
 
-        wget -O rq1.py https://gist.githubusercontent.com/Jacarte/faa4002a8dc59d0282a4c6ee8474c4eb/raw/4f95bb3c6f6f70414e8bd08c74b8e7d3dba09f0c/rq1.meta.generic.py
-
-        python3 rq1.py "{{inputs.parameters.file}}" || true
+        # Save the db as well
+        python3 create_db.py "{{inputs.parameters.file}}" || true
+        python3 check_db.py "{{inputs.parameters.file}}" /results.json || rm "{{inputs.parameters.file}}.db"
         
 

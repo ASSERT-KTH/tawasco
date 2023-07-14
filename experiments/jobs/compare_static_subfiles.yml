@@ -1,0 +1,140 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: wasm-get-subfiles-meta-1-
+spec:
+  entrypoint: per-file
+  # The fingerprint is low, lets do them all at once
+  # TODO, change if we start doing the pairwise comparison here...I would say no
+  parallelism: 20
+  templates:
+  - name: per-file
+    steps:
+    - - name: select-file
+        template: wasm-mutate-template
+        arguments:
+          parameters:
+            - name: file
+              value: "{{ item.file }}"
+        withItems:
+          - { file: "100_doors" }
+          
+          
+    #- - name: merge-results
+    #    template: merge-results-template    
+    #    continueOn:
+    #      failed: true
+
+          # Add the others here
+        
+  - name: wasm-mutate-template
+    activeDeadlineSeconds: 36000
+    retryStrategy:
+      limit: 1
+    inputs:
+
+      parameters:
+      - name: file
+      artifacts:
+        - name: variants
+          path: /variants.zip
+          optional: true
+          archive:
+            none: {}
+          s3:
+            bucket: wasm-mutate
+            endpoint: minio-service.minio:3434
+            insecure: true
+            # Avoid to mount the full metas_filtered folder in the container
+            key: "/variants/{{inputs.parameters.file}}.c/variants.zip"
+            accessKeySecret:
+              name: argo-artifacts
+              key: accesskey
+            secretKeySecret:
+              name: argo-artifacts
+              key: secretkey
+      
+    outputs:
+      artifacts:
+      - name: results
+        path: /out/{{inputs.parameters.file}}/overall.json
+        optional: true
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "rq1/meta_subfiles/{{inputs.parameters.file}}.json"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
+    script:
+      image: jacarte/ww6
+      command: [bash]
+      #resources:
+      #  requests:
+      #    memory: "0"
+      #    cpu: 1.0
+      source: |
+
+
+        cd /
+
+        export PATH="~/.cargo/bin:/usr/local/bin:$PATH"
+        git clone --recursive https://github.com/bytecodealliance/wasm-tools.git
+        cd wasm-tools
+        cargo build --release
+        cp target/release/wasm-tools /usr/local/bin/
+
+        wasm-tools --version || exit 1
+        
+        # Download mc
+        mkdir -p $HOME/minio-binaries
+        wget -O $HOME/minio-binaries/mc https://dl.min.io/client/mc/release/linux-amd64/mc
+        ls
+        echo "======"
+        chmod +x $HOME/minio-binaries/mc
+        export PATH=$PATH:$HOME/minio-binaries/
+
+        mc config host add exp http://minio-service.minio:3434 minio minio123
+
+        # Skip if the result file already exist
+        if [[  $(mc ls "exp/wasm-mutate/rq1/meta_subfiles/{{inputs.parameters.file}}.json" | wc -l) -gt 0 ]]
+        then
+            echo "Already exist. Skip"
+            # Check the number of oracles ?
+            exit 0
+          
+        fi
+
+        # Install 7z deps
+        # apt-get update && apt-get install -y p7zip-full
+
+        # Install nodejs
+        apt-get install -y nodejs unzip
+
+        # Unzip the variants
+        unzip  /variants.zip -d /out
+        ls /usr/local/bin
+
+        # download the scripts from GIT
+
+        #WASMTIME = os.environ.get("WASMTIME", "wasmtime")
+        #WASM_TOOLS = os.environ.get("WASM_TOOLS", "wasm-tools")
+        #DTW_TOOLS = os.environ.get("DTW_TOOLS", "dtw-tools")
+        #BYNARYEN = os.environ.get("BYNARYEN", "wasm-opt")
+        #CHROME = os.environ.get("CHROME", "v8")
+
+
+        wget -O rq1.1.py https://gist.githubusercontent.com/Jacarte/faa4002a8dc59d0282a4c6ee8474c4eb/raw/53150f8b4fa51cd92c0f2b382c9e7c06ec205e97/generate_subfiles.py 
+        wget -O v8_bytecode.py https://gist.githubusercontent.com/Jacarte/faa4002a8dc59d0282a4c6ee8474c4eb/raw/cbafe21d4fbea3f591929ba8926e9fdf63c94894/v8_bytecode.py
+
+        echo "$(which wasm-tools)"
+        CHROME="node" WASM_TOOLS="$(which wasm-tools)"  python3 rq1.1.py "/out/out/{{inputs.parameters.file}}" || true
+        
+

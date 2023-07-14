@@ -1,0 +1,14 @@
+[package]
+name = "div-tools"
+version = "0.0.1"
+authors = ["Javier Cabrera @Jaacarte"]
+description = "CLI tools for Wasm diversification research"
+categories = ["wasm"]
+
+[workspace]
+members = [
+  #'fuzz',
+  # 'stacking',
+  'tracer',
+  'host'
+]

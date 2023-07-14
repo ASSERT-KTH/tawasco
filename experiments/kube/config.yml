@@ -1,0 +1,16 @@
+data:
+
+  config: |
+    artifactRepository:
+      archiveLogs: true
+      s3:
+        bucket: wasm-mutate
+        endpoint: 137.135.188.207:9000
+        insecure: true
+        accessKeySecret:
+          name: argo-artifacts-extr
+          key: accesskey
+        secretKeySecret:
+          name: argo-artifacts-extr
+          key: secretkey
+

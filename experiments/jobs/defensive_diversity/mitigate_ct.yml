@@ -1,25 +1,16 @@
-# TODO
-# Try with 100 seeds for 10, 100, 1000, 2000, 10000 stacked variants = (5*100) binaries... then we can generalize
-
-# 1 - Generate the variants based on the number of stacked mutations
-# 2 - Execute the variants
-# 3 - Collect the BER records
-# 
-# After finding the best number of stacked, we can do a bisection on the number of stacked variants
-# Check if the variant is resilient after optimizing it with binaryen
-
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: wasm-wbc-mitigation-1-
+  generateName: wasm-ct-mitigation-1-
 spec:
+  archiveLogs: true
   entrypoint: per-file
   parallelism: 30
   templates:
   - name: per-file
     steps:
-    - - name: measure-time
-        template: measure-time-template
+    - - name: measure-ctime
+        template: measure-ctime-template
         arguments:
           parameters:
             - name: file
@@ -28,14 +19,18 @@ spec:
               value: "{{ item.stacked }}"
             - name: seed
               value: "{{ item.seed }}"
+            - name: secret
+              value: "{{ item.secret }}"
         withItems:
           # Load from file
-          
-          - { file: "sp.wasm", stacked: "0",  seed: "10" }
-          - { file: "eviction.wasm", stacked: "0",  seed: "10" }
+          # The seed controls somesort of cache. If the results already existed before, the step will be skipped
+          - { file: "sp.wasm", stacked: "0",  seed: "14", secret: "SM" }
+          - { file: "eviction.wasm", stacked: "0",  seed: "14", secret: "My password" }
+
+          # Add the mutations here
           
 
-  - name: measure-time-template
+  - name: measure-ctime-template
     retryStrategy:
       limit: 2
     inputs:
@@ -44,6 +39,7 @@ spec:
       - name: file
       - name: stacked
       - name: seed
+      - name: secret
       artifacts:
       - name: data
         path: "/input.wasm"
@@ -64,26 +60,9 @@ spec:
           
     outputs:
       artifacts:
-      - name: attacks
-        path: /timing
-        optional: true
-        archive:
-          none: {}
-        s3:
-          bucket: wasm-mutate
-          endpoint: minio-service.minio:3434
-          insecure: true
-          # Avoid to mount the full metas_filtered folder in the container
-          key: "/timing/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/"
-          accessKeySecret:
-            name: argo-artifacts
-            key: accesskey
-          secretKeySecret:
-            name: argo-artifacts
-            key: secretkey
       
       - name: ber
-        path: /timing/ber.txt
+        path: /result.txt
         optional: true
         archive:
           none: {}
@@ -101,14 +80,14 @@ spec:
             key: secretkey
       
     script:
-      image: jacarte/wm-image:latest
+      image: jacarte/wm-image:839e112
       command: [bash]
       # Comment out later if it holds
       #
       resources:
         requests:
-          memory: "0"
-          cpu: 1
+          memory: "4G"
+          cpu: 2.5
       source: |
 
         cd /
@@ -123,7 +102,7 @@ spec:
 
         mc config host add exp http://minio-service.minio:3434 minio minio123
 
-        if [[  $(mc ls "exp/wasm-mutate/attacks/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/sbox.result.txt" | wc -l) -gt 0 ]]
+        if [[  $(mc ls "exp/wasm-mutate/timing_bers/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}.ber.txt" | wc -l) -gt 0 ]]
         then
             echo "Already exist. Skip"
             # Check the number of oracles ?
@@ -169,13 +148,16 @@ spec:
         mv host_single /usr/local/bin/host_single
 
 
-        wget -O host.gz https://github.com/Jacarte/tawasco/releases/download/0.1.9/host-x86_64-linux-0.1.9.gz
+        wget -O host.gz https://github.com/Jacarte/tawasco/releases/download/0.2.1/host-x86_64-linux-0.2.1.gz
         7z x host.gz
         chmod +x host
         mv host /usr/local/bin/host
+        export PATH="/usr/local/bin:$PATH"
 
 
 
+        # disable aslr
+        sysctl kernel.randomize_va_space=0
         # Download PIN
         # wget http://software.intel.com/sites/landingpage/pintool/downloads/pin-3.15-98253-gb56e429b1-gcc-linux.tar.gz
         # tar xzf pin-3.15-98253-gb56e429b1-gcc-linux.tar.gz
@@ -183,7 +165,10 @@ spec:
         export PIN_ROOT=/opt/pin-3.15-98253-gb56e429b1-gcc-linux
         # RUN echo -e "\nexport PIN_ROOT=/opt/pin-3.15-98253-gb56e429b1-gcc-linux" >> ~/.bashrc
 
+        TRIES=100 TRIES_INFER=1 host input.wasm
         # execute the timing attack
-        host /input.wasm
+        # download the BER script
+        wget -O cache.py https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/metrics/cache_timing/estimate_stride.py
+        HOST_SINGLE="./host" python3 cache.py input.wasm 1000000 1000000 {{inputs.parameters.secret}} 2> /result.txt
 
         

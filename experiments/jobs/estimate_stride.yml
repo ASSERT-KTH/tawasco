@@ -1,0 +1,35 @@
+# We need a pc for each job
+# Run several in parallel to compare the results 
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: estimate-estride-1-
+spec:
+  entrypoint: per-file
+  parallelism: 50
+  templates:
+  - name: per-file
+    steps:
+    - - name: select-name
+        template: select-name-template
+        arguments:
+          parameters:
+            - name: name
+              value: "{{ item.name }}"
+        withItems:
+          - { name: "n1" }
+  - name: select-name-template
+    inputs:
+      parameters:
+        - name: name
+    script:
+      image: jacarte/ww6
+      command: [bash]
+      #resources:
+      #  requests:
+      #    memory: "0"
+      #    cpu: 1.2
+      source: |
+        cd /host_based/rustctre
+        make
+        python3 estimate_stride.py src/lib.rs

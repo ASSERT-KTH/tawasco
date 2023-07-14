@@ -1,0 +1,5 @@
+head -n 1000 stacking.wasm.000032ac58e7b5735807cd6370fd12c1830e4eef78aa28e45b09a3dea9904267.0058899494b1caf01802c7ea31b0235286d60f9c96364e7dce49e6dbcad8c037.chaos.wasm.mem.txt > f1.txt
+head -n 1000 stacking.wasm.000032ac58e7b5735807cd6370fd12c1830e4eef78aa28e45b09a3dea9904267.00b535f8085f5ec83c2a0423e4e03cdf9063172de682c321ae54e1b0ac708300.chaos.wasm.mem.txt > f2.txt
+
+
+diff -y  f1.txt f2.txt > diff.txt

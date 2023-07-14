@@ -1,0 +1,1 @@
+wasm-dis $1.wasm -o $1.wast

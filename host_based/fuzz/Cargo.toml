@@ -1,0 +1,39 @@
+[package]
+name = "wasm-mutate-diff-fuzz"
+version = "0.0.1"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+tempfile = "3.0"
+anyhow = "1.0.58"
+arbitrary = { version="1.1.0", features=["derive"] }
+env_logger = "0.9"
+libfuzzer-sys = "0.4.0"
+log = "0.4.17"
+wasm-mutate = { path = "../../wasm-tools/crates/wasm-mutate", optional = true  }
+wasmparser = { path = "../../wasm-tools/crates/wasmparser"  }
+wasmprinter = { path = "../../wasm-tools/crates/wasmprinter" }
+wast = { path = "../../wasm-tools/crates/wast" }
+wat = { path = "../../wasm-tools/crates/wat" }
+stacking = { path = "../stacking", features = ["testing"] }
+wasm-encoder = { path = "../../wasm-tools/crates/wasm-encoder" }
+wasmtime = { git = "https://github.com/Jacarte/wasmtime", rev = "20c58362959562627b93bfb9f15423ef0d4f4376" }
+wasmtime-wasi = { git = "https://github.com/Jacarte/wasmtime", rev = "20c58362959562627b93bfb9f15423ef0d4f4376" }
+wasi-common = { git = "https://github.com/Jacarte/wasmtime", rev = "20c58362959562627b93bfb9f15423ef0d4f4376" }
+wasmtime-jit = { git = "https://github.com/Jacarte/wasmtime", rev = "20c58362959562627b93bfb9f15423ef0d4f4376" }
+
+
+
+[lib]
+test = false
+doctest = false
+
+[[bin]]
+name = "wasm2wat"
+path = "fuzz_targets/wasm2wat.rs"
+test = false
+doc = false
+bench = false

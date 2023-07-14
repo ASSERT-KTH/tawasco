@@ -1,13 +1,3 @@
-# TODO
-# Try with 100 seeds for 10, 100, 1000, 2000, 10000 stacked variants = (5*100) binaries... then we can generalize
-
-# 1 - Generate the variants based on the number of stacked mutations
-# 2 - Execute the variants
-# 3 - Collect the BER records
-# 
-# After finding the best number of stacked, we can do a bisection on the number of stacked variants
-# Check if the variant is resilient after optimizing it with binaryen
-
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
@@ -40,6 +30,15 @@ spec:
           - { file: "stacking.asym.wasm.50000.wasm", stacked: "0",  seed: "10" }
           - { file: "stacking.asym.wasm.60000.wasm", stacked: "0",  seed: "10" }
           - { file: "stacking.asym.wasm.66000.wasm", stacked: "0",  seed: "10" }
+
+
+          - { file: "stacking.asym.wasm.88000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.90000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.92000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.94000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.96000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.98000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.238000.wasm", stacked: "0",  seed: "10" }
           
 
     - - name: select-file
@@ -62,9 +61,42 @@ spec:
           - { file: "stacking.asym.wasm.60000.wasm", stacked: "0",  seed: "10" }
           - { file: "stacking.asym.wasm.66000.wasm", stacked: "0",  seed: "10" }
 
+          - { file: "stacking.asym.wasm.88000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.90000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.92000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.94000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.96000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.98000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.238000.wasm", stacked: "0",  seed: "10" }
 
-
+    - - name: attack
+        template: attack-template
+        arguments:
+          parameters:
+            - name: file
+              value: "{{ item.file }}"
+            - name: stacked
+              value: "{{ item.stacked }}"
+            - name: seed
+              value: "{{ item.seed }}"
+        withItems:
+          - { file: "wb_challenge.wasm", stacked: "0",  seed: "1" }
+          - { file: "stacking.asym.wasm.2000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.10000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.30000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.40000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.50000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.60000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.66000.wasm", stacked: "0",  seed: "10" }
           # Really large
+
+          - { file: "stacking.asym.wasm.88000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.90000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.92000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.94000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.96000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.98000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.238000.wasm", stacked: "0",  seed: "10" }
 
           # Add the others here
     # - - Make the performance evaluation
@@ -90,6 +122,13 @@ spec:
           - { file: "stacking.asym.wasm.60000.wasm", stacked: "0",  seed: "10" }
           - { file: "stacking.asym.wasm.66000.wasm", stacked: "0",  seed: "10" }
           
+          - { file: "stacking.asym.wasm.88000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.90000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.92000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.94000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.96000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.98000.wasm", stacked: "0",  seed: "10" }
+          - { file: "stacking.asym.wasm.238000.wasm", stacked: "0",  seed: "10" }
         continueOn:
           failed: true
 
@@ -176,6 +215,7 @@ spec:
           secretKeySecret:
             name: argo-artifacts
             key: secretkey
+
     script:
       image: jacarte/wm-image:latest
       command: [bash]
@@ -242,23 +282,6 @@ spec:
             name: argo-artifacts
             key: secretkey
       
-      - name: ber
-        path: /wbc/ches2016/ber.txt
-        optional: true
-        archive:
-          none: {}
-        s3:
-          bucket: wasm-mutate
-          endpoint: minio-service.minio:3434
-          insecure: true
-          # Avoid to mount the full metas_filtered folder in the container
-          key: "/bers/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}.ber.txt"
-          accessKeySecret:
-            name: argo-artifacts
-            key: accesskey
-          secretKeySecret:
-            name: argo-artifacts
-            key: secretkey
       
     script:
       image: jacarte/wm-image:latest
@@ -283,7 +306,7 @@ spec:
 
         mc config host add exp http://minio-service.minio:3434 minio minio123
 
-        if [[  $(mc ls "exp/wasm-mutate/attacks/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/sbox.result.txt" | wc -l) -gt 0 ]]
+        if [[  $(mc ls "exp/wasm-mutate/attacks/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/db.db" | wc -l) -gt 0 ]]
         then
             echo "Already exist. Skip"
             # Check the number of oracles ?
@@ -358,14 +381,96 @@ spec:
         WASMTIME="host_single" python2 trace_it.py 3000
         ls -lah .
         # Remove files larger than 1 Gb
-        find . -type f -size +1G -exec rm -f {} \;
+        # find . -type f -size +1G -exec rm -f {} \;
 
-        # mv the attack configs
+        
 
+  - name: attack-template
+    retryStrategy:
+      limit: 2
+    inputs:
+
+      parameters:
+      - name: file
+      - name: stacked
+      - name: seed
+      
+          
+    outputs:
+      artifacts:
+      - name: attacks
+        path: /wbc/ches2016
+        optional: true
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "/attacks/results/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
+      
+      - name: ber
+        path: /wbc/ches2016/ber.txt
+        s3:
+          bucket: wasm-mutate
+          endpoint: minio-service.minio:3434
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "/bers/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}.ber.txt"
+          accessKeySecret:
+            name: argo-artifacts
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts
+            key: secretkey
+      
+    script:
+      image: jacarte/wm-image:latest
+      command: [bash]
+      # Comment out later if it holds
+      #
+      resources:
+        requests:
+          memory: "0"
+          cpu: 1
+      source: |
+
+        mkdir -p /wbc/ches2016
+
+        # install minio mc
+        mkdir -p $HOME/minio-binaries
+        wget -O $HOME/minio-binaries/mc https://dl.min.io/client/mc/release/linux-amd64/mc
+        ls
+        echo "======"
+        chmod +x $HOME/minio-binaries/mc
+        export PATH=$PATH:$HOME/minio-binaries/
+
+        mc config host add exp http://minio-service.minio:3434 minio minio123
+
+        if [[  $(mc ls "exp/wasm-mutate/bers/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}.ber.txt" | wc -l) -gt 0 ]]
+        then
+            echo "Already exist. Skip"
+            # Check the number of oracles ?
+            exit 0
+          
+        fi
+
+        cd /wbc/ches2016
+        mc mirror --overwrite exp/wasm-mutate/attacks/{{inputs.parameters.file}}_{{inputs.parameters.stacked}}_{{inputs.parameters.seed}}/ .
+        
+        cd /wbc/ches2016
+        ls .
         # mem_addr1_rw1_2_41376.attack_sbox.config
-        daredevil -c mem_addr1_rw1_*_*.attack_sbox.config > sbox.result.txt
+        daredevil -c mem_addr1_rw1_*_*.attack_sbox.config > sbox.result.txt || exit 1
         # mem_addr1_rw1_2_41376.attack_multinv.config
-        daredevil -c mem_addr1_rw1_*_*.attack_multinv.config > mulinv.result.txt
+        daredevil -c mem_addr1_rw1_*_*.attack_multinv.config > mulinv.result.txt || exit 1
 
         # wait
 
