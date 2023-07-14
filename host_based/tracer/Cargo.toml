@@ -1,0 +1,27 @@
+[package]
+name = "tracer"
+version = "0.0.1"
+publish = false
+description = "Opens and executes a Wasm binary. Uses wasmtime hooks to pause and unpase IntelPIN tracing"
+edition = "2021"
+authors = ["Jacarte <jacarte9212@gmail.com>"]
+
+[build-dependencies]
+cc = "1.0"
+
+# wasmtime as a dep
+[dependencies]
+wasmtime = { path = "../../wasmtime/crates/wasmtime" }
+wasmtime-wasi = { path = "../../wasmtime/crates/wasi" }
+wasmtime-jit = { path = "../../wasmtime/crates/jit" }
+libc = "0.2"
+rustix = "0.37.13"
+clap = { version = "4.0.0", features = ["derive"] }
+
+# Add reqwest, tar and gz as a build dependency
+# All of this just to download pin to compile the tracer :|
+[build-dependencies.flate2]
+version = "*"
+[build-dependencies.tar]
+version = "*"
+
