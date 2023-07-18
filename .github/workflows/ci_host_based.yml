@@ -5,7 +5,7 @@
 # 4. Publish a release in your personal fork with the target of the release set to the branch with your changes
 # 5. Confirm the workflow completes and that assets are attached to the release as expected
 
-name: Build tracer for tracing
+name: Build tracer
 
 on:
   workflow_dispatch:
