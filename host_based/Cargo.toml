@@ -7,8 +7,8 @@ categories = ["wasm"]
 
 [workspace]
 members = [
-  #'fuzz',
-  # 'stacking',
+  'fuzz',
+  'stacking',
   'tracer',
   'host'
 ]
