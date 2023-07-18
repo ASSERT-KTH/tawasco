@@ -85,7 +85,8 @@ BOOL ExcludedAddress(ADDRINT ip)
 {
     // Wathever is beyond 0x7000
     //              00000000000
-    return ip >= 0x7fffa97ed630
+    //           0x7ffe6e1f0935
+    return ip >= 0x700000000000
 }
 
 bool cannot_trace() {
