@@ -5,30 +5,31 @@
 #include <sys/shm.h>
 #include <stdio.h>
 
-#define SHARED_MEMORY_KEY 123442
 // Include a sem here to port the tracing itself to the host
+#define SHARED_MEMORY_KEY 123442
 
-#ifndef CREATE_LOC
-    #define CREATE_LOC 1
-    
-
-    typedef struct {
-        // Define your shared data variables here
-        char lock;
-    } SharedLock;
+typedef struct {
+    // Define your shared data variables here
+    char lock;
+} SharedLock;
 
 
-    SharedLock* sharedVal;
+SharedLock* sharedVal;
 
-    // The lock helps to interrupt the recording of the traces is the host code is executed
-    // Call this from the traacer pintool, not from the host interpreter
-    void create_lock() {
-        int shmid = shmget(SHARED_MEMORY_KEY, sizeof(SharedLock), IPC_CREAT | 0666);
-        if (shmid == -1) {
-            perror("shmget");
-            
-        }
 
-        sharedVal = (SharedLock*)shmat(shmid, NULL, 0);
+// Linux specific code
+
+// The lock helps to interrupt the recording of the traces is the host code is executed
+// Call this from the traacer pintool, not from the host interpreter
+void create_lock() {        
+    int shmid = shmget(SHARED_MEMORY_KEY, sizeof(SharedLock), IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("shmget");
+
+        printf("Cannot create shmemory");
+        exit(1);    
     }
-#endif
+    printf("Shared memory created\n");
+    sharedVal = (SharedLock*)shmat(shmid, NULL, 0);
+    sharedVal->lock = 1;
+}

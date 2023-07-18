@@ -7,4 +7,4 @@
 
 ## How to
 
-After running `cargo build --release`, run `./pin.bin -t intel64.tracer.so -o trace.txt -i 1 -m 1 -- ./target/release/tracer ./hello.wasm`
+After running `cargo build --release`, run `cd pintool/pin-3.* && ./pin.bin -t obj-intel64/tracer.so -o trace.txt -i 1 -m 1 -- ./target/release/tracer ./hello.wasm`

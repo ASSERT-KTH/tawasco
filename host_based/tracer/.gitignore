@@ -2,3 +2,5 @@ pin.tar.gz
 pin-*
 pin.bin
 obj-*
+*tracer.so
+pin

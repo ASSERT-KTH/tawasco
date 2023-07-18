@@ -3,13 +3,13 @@ use std::arch::asm;
 use wasmtime_wasi::sync::WasiCtxBuilder;
 extern crate libc;
 use std::sync::Arc;
-use host_single::{MemoryAllocator, get_current_working_dir, create_linker};
+use tracer::{MemoryAllocator, get_current_working_dir, create_linker};
 
 /// # Wasmtime based execution of a wasm binary with IntelPIN tracing.
 /// # Otherwise, the execution is based on a regular Wasm-WASI binary.
 ///
 /// ## Example
-/// `pin -t tracer.so tracer i.wasm`
+/// `pin -t tracer.so -- tracer i.wasm`
 ///
 /*#[derive(Parser)]
 struct Options {
@@ -35,7 +35,7 @@ extern "C" {
     
     fn set_lock(val: u8);
 
-    // fn create_lock();
+    fn attach();
 }
 
 #[inline]
@@ -173,6 +173,8 @@ pub fn execute_wasm(path: String) {
 
 pub fn main() {
     let now = std::time::Instant::now();
+    // Attacjh this process to the shared mem
+    unsafe { attach() };
     unsafe {set_lock(1)};
 
     let args: Vec<String> = std::env::args().collect();

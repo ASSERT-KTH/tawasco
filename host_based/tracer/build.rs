@@ -1,11 +1,11 @@
 use std::path::Path;
 use std::fs;
-use std::io::{Read, copy};
 use std::fs::File;
 use flate2::read::GzDecoder;
 use tar::Archive;
 
 fn main() {
+    
     // Download pintool if it does not exist
     // Set the download tool, curl either wget if one is installed
     let downloader = match std::env::consts::OS {
@@ -57,7 +57,16 @@ fn main() {
         eprintln!("Extracting pintool");
         let tar = GzDecoder::new(tar_gz);
         let mut archive = Archive::new(tar);
+        
         archive.unpack("pintool").unwrap();
+        // after unpack change the folder name
+        let _ = std::process::Command::new("mv")
+            .args([
+                format!("pintool/{pinversion}", pinversion=pinversion),
+                format!("pintool/pin"),
+            ])
+            .output()
+            .expect("failed to rename pintool folder");
         fs::remove_file("pin.tar.gz").unwrap();
     }
     // We link the bridge to the current wasmtime interpreter usage
@@ -69,14 +78,30 @@ fn main() {
         .compile("pintool_bridge");
     
 
+    
+    println!("cargo:rerun-if-changed=pintool/pintool_bridge.c");
+    println!("cargo:rerun-if-changed=pintool/common/common.c");
+    println!("cargo:rustc-link-lib=pintool_bridge");
+    
     // Compile the pintool tracer as well from here
     // Call make to build pintool
+    let out = std::process::Command::new("make")
+    .args([
+        "clean-all"
+    ])
+    .current_dir("pintool")
+    // Set env
+    .env("PIN_ROOT", &pintool_path)
+    .output()
+    .expect("failed to clean pintool");
+
     let out = std::process::Command::new("make")
     .args([
         "all"
     ])
     // Set env
     .env("PIN_ROOT", &pintool_path)
+    .current_dir("pintool")
     .output()
     .expect("failed to build pintool");
 
@@ -88,16 +113,7 @@ fn main() {
 
     // After compiling, copy the pin bin and the lib to this folder root, and emit a message about how ot tuse it
     // Copy the pintool to the root
-    // Copy using rust, not a process
-    let _ = fs::copy(format!("{pintool_path}/pin", pintool_path=pintool_path.to_str().unwrap()), "pin.bin");
-    // Copy the shared library obj-ia32/tracer.so and obj-intel64/tracer.so
-    let _ = fs::copy("pintool/obj-intel64/tracer.o", "intel64.tracer.o");
-    let _ = fs::copy("pintool/obj-ia32/tracer.o", "ia32.tracer.o");
-
     
-    println!("cargo:rerun-if-changed=pintool/pintool_bridge.c");
-    println!("cargo:rerun-if-changed=pintool/common/common.c");
-    println!("cargo:rustc-link-lib=pintool_bridge");
     println!("cargo:rerun-if-changed=pintool/Makefile");
     println!("cargo:rerun-if-changed=pintool/tracer.cpp");
     println!("cargo:rerun-if-changed=build.rs");

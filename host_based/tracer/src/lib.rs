@@ -16,7 +16,7 @@ pub fn notify_mem(ptr: *mut libc::c_void, size: usize){
     eprintln!("Executable memory at {:?}({})", ptr, size);
 }
 
-
+// This is to replace the reserve for wasmtime 
 #[no_mangle]
 pub fn custom_reserve(size: usize) -> *mut libc::c_void {
     let ptr = unsafe {
@@ -35,6 +35,7 @@ pub fn custom_reserve(size: usize) -> *mut libc::c_void {
 
 }
 
+// This is to replace the allocate for wasmtime 
 #[no_mangle]
 pub fn custom_allocator(size: usize) -> *mut libc::c_void {
     unsafe { eprintln!("allocating at {:?} ({})", STATIC_ADDRESS2, size*SCALE) };
@@ -54,6 +55,7 @@ pub fn custom_allocator(size: usize) -> *mut libc::c_void {
 
 }
 
+// This is to replace the allocate file for wasmtime 
 #[no_mangle]
 pub fn custom_file_allocator(size: usize, file: &std::fs::File) -> *mut libc::c_void {
     eprintln!("Allocating file");
