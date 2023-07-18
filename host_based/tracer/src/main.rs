@@ -156,14 +156,16 @@ pub fn execute_wasm(path: String) {
     linker.module(&mut store, "", &module).unwrap();
 
     let now = std::time::Instant::now();
-    let instance = linker.instantiate(&mut store, &module).unwrap();
-    let func = instance
-        .get_func(&mut store, "main")
-        .unwrap();
+    // let instance = linker.instantiate(&mut store, &module).unwrap();
+    let func = linker
+            .get_default(&mut store, "")
+            .unwrap()
+            .typed::<(), ()>(&mut store)
+            .unwrap();
+    
+            func.call(&mut store, ())
+                .unwrap();
 
-    func.call(&mut store, &mut [], &mut [])
-        .unwrap();
-   
     eprintln!("Execution elapsed {}ms", now.elapsed().as_millis());
     let now = std::time::Instant::now();
     unsafe {set_lock(1)};
@@ -175,7 +177,7 @@ pub fn main() {
     let now = std::time::Instant::now();
     // Attacjh this process to the shared mem
     unsafe { attach() };
-    
+
     let args: Vec<String> = std::env::args().collect();
 
     let path = args.get(1).expect("Pass the wasm file as the first argument");

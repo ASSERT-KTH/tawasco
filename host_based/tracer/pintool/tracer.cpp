@@ -506,8 +506,8 @@ int  main(int argc, char *argv[])
     INS_AddInstrumentFunction(Instruction_cb, 0);
     PIN_AddFiniFunction(Fini, 0);
 
-    cerr << "Starting program\n";
-    cerr << "Tracing: " << cannot_trace() << "\n";
+    cerr << "[PINTOOL] Starting program\n";
+    cerr << "[PINTOOL] Tracing: " << !cannot_trace() << "\n";
     PIN_StartProgram();
     return 0;
 }
