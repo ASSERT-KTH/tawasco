@@ -396,7 +396,7 @@ void LogIndirectCallAndArgs(ADDRINT target, BOOL taken, ADDRINT arg0, ADDRINT ar
 /* ================================================================================= */
 void Trace_cb(TRACE trace, void *v)
 {
-    if(cannot_trace()) return;
+    // if(cannot_trace()) return;
     /* Iterate through basic blocks */
     for(BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
     {
