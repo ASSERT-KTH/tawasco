@@ -57,6 +57,7 @@ KNOB<BOOL> KnobLogCall(KNOB_MODE_WRITEONCE, "pintool",
                        "c", "1", "log all calls");
 KNOB<BOOL> KnobLogCallArgs(KNOB_MODE_WRITEONCE, "pintool",
                            "C", "0", "log all calls with their first three args");
+// TODO this
 KNOB<string> KnobLogFilter(KNOB_MODE_WRITEONCE, "pintool",
                         "f", "1", "(0) no filter (1) filter system libraries (2) filter all but main exec (0x400000-0x410000) trace only specified address range");
 KNOB<string> KnobLogFilterLive(KNOB_MODE_WRITEONCE, "pintool",
@@ -281,6 +282,8 @@ void LogBasicBlock(ADDRINT addr, UINT32 size)
 /* ================================================================================= */
 VOID Instruction_cb(INS ins, VOID *v)
 {
+    // TODO 
+    // Exclude instruction address
     
     if (KnobLogMem.Value()) {
 

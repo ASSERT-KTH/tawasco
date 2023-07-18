@@ -29,8 +29,10 @@ fn main() {
     let pintool_path = format!("{absolute_path}/pintool/{pinversion}");
     eprintln!("Pintool should be at {}", pintool_path);
     let pintool_path = Path::new(&pintool_path);
-
-    if !pintool_path.exists() {
+    let pintool_path_final = format!("{absolute_path}/pintool/pin");
+    let pintool_path_final = Path::new(&pintool_path_final);
+    
+    if !pintool_path_final.exists() {
         // Disernate the OS
         let os = std::env::consts::OS;
         let url = match os {

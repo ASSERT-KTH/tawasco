@@ -175,8 +175,7 @@ pub fn main() {
     let now = std::time::Instant::now();
     // Attacjh this process to the shared mem
     unsafe { attach() };
-    unsafe {set_lock(1)};
-
+    
     let args: Vec<String> = std::env::args().collect();
 
     let path = args.get(1).expect("Pass the wasm file as the first argument");
