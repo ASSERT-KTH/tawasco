@@ -5,7 +5,7 @@
 # 4. Publish a release in your personal fork with the target of the release set to the branch with your changes
 # 5. Confirm the workflow completes and that assets are attached to the release as expected
 
-name: Build host_single for tracing
+name: Build tracer for tracing
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ on:
     branches:
       - main
     paths:
-      - "host_based/host_single/**"
+      - "host_based/tracer/**"
 
 
 concurrency:
@@ -37,8 +37,8 @@ jobs:
         include:
           - name: linux
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
-            path: host_based/host_single/target/x86_64-unknown-linux-gnu/release/host_single
-            asset_name: host_single-x86_64-linux-${{ github.event.release.tag_name }}
+            path: host_based/tracer/target/x86_64-unknown-linux-gnu/release/tracer
+            asset_name: tracer-x86_64-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             target: x86_64-unknown-linux-gnu
           
@@ -50,8 +50,8 @@ jobs:
               # target: aarch64-unknown-linux-gnu
           - name: macos
             os: macos-latest
-            path: host_based/host_single/target/x86_64-apple-darwin/release/host_single
-            asset_name: host_single-x86_64-macos-${{ github.event.release.tag_name }}
+            path: host_based/tracer/target/x86_64-apple-darwin/release/tracer
+            asset_name: tracer-x86_64-macos-${{ github.event.release.tag_name }}
             shasum_cmd: shasum -a 256
             target: x86_64-apple-darwin
           
@@ -74,9 +74,15 @@ jobs:
 
 
       - name: Build CLI ${{ matrix.os }}
-        run: cd wasmtime && git submodule update --init && cd ../ && cd host_based/host_single && cargo build --release --target ${{ matrix.target }}
+        run: cd wasmtime && git submodule update --init && cd ../ && cd host_based/tracer && cargo build --release --target ${{ matrix.target }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+
+      - name: Test tracer pintools ${{ matrix.os }}
+        run: cd wasmtime && git submodule update --init && cd ../ && cd host_based/tracer/pintool && bash test.sh
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+
 
       - name: Archive assets
         run: gzip -k -f ${{ matrix.path }} && mv ${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
