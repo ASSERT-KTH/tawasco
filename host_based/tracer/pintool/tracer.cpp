@@ -86,7 +86,7 @@ BOOL ExcludedAddress(ADDRINT ip)
     // Wathever is beyond 0x7000
     //              00000000000
     //           0x7ffe6e1f0935
-    return ip >= 0x700000000000
+    return ip >= 0x700000000000;
 }
 
 bool cannot_trace() {
@@ -189,7 +189,7 @@ VOID Fini(INT32 code, VOID* v)
     TraceFile.close();
     // Printout the hash of the file, call system("sha256sum ")
     cerr << "[PINTOOL] Finishing program\n";
-    system("sha256sum " + KnobOutputFile.Value());
+    // system("sha256sum " + KnobOutputFile.Value());
 }
 
 
