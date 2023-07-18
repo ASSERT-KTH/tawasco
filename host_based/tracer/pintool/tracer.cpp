@@ -80,6 +80,14 @@ INT32 Usage()
 }
 
  
+
+BOOL ExcludedAddress(ADDRINT ip)
+{
+    // Wathever is beyond 0x7000
+    //              00000000000
+    return ip >= 0x7fffa97ed630
+}
+
 bool cannot_trace() {
     return get_lock() == 1;
 }
@@ -268,6 +276,7 @@ VOID printInst(ADDRINT ip, string *disass, INT32 size)
 /* ===================================================================== */
 void LogBasicBlock(ADDRINT addr, UINT32 size)
 {
+    // if (addr >= 0x7fffffffffff) return;
     if(cannot_trace()) return;
     PIN_GetLock(&PINL, addr);
     if (InfoType >= B) bigcounter++;
@@ -285,8 +294,9 @@ void LogBasicBlock(ADDRINT addr, UINT32 size)
 /* ================================================================================= */
 VOID Instruction_cb(INS ins, VOID *v)
 {
-    // TODO 
     // Exclude instruction address
+    if(ExcludedAddress(INS_Address(ins)))
+        return;
     
     if (KnobLogMem.Value()) {
 
@@ -407,6 +417,9 @@ void Trace_cb(TRACE trace, void *v)
     for(BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
     {
         INS head = BBL_InsHead(bbl);
+
+        if(ExcludedAddress(INS_Address(head)))
+            return;
         /* Instrument function calls? */
         if(KnobLogCall.Value() || KnobLogCallArgs.Value())
         {
