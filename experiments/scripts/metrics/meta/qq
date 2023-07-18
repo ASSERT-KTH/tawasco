@@ -1,2 +1,0 @@
--- SQLite
-UPDATE "wasm" SET "parent_id" = 47342 WHERE ("wasm"."id" = 47343)

@@ -178,6 +178,9 @@ VOID Fini(INT32 code, VOID* v)
 {    
     TraceFile.setf(ios::showbase);
     TraceFile.close();
+    // Printout the hash of the file, call system("sha256sum ")
+    cerr << "[PINTOOL] Finishing program\n";
+    system("sha256sum " + KnobOutputFile.Value());
 }
 
 
