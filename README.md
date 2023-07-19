@@ -52,7 +52,7 @@ To reproduce this attacks and defenses. We propose to use a separated machine. F
 ## Roadmap browser
 
 - [ ] [Port contention side channel](https://cmaurice.fr/pdf/asiaccs22_rokicki.pdf), 
-- [ ] Web port contention repo here, https://github.com/MIAOUS-group/web-port-contention
-- [ ] CPU Port Contention Without SMT: Sources https://github.com/MIAOUS-group/port-contention-without-smt 
+- [ ] Web port contention repo here, https://github.com/MIAOUS-group/web-port-contention, **Can wasm-mutate protect against port-contention covert side-channels?**
+- [ ] CPU Port Contention Without SMT: Sources https://github.com/MIAOUS-group/port-contention-without-smt, **Can wasm-mutate protect against privacy?**
 - [ ] Create automatic benchmark for measuring exfiltration accuracy
 - [ ] Apply wasm-mutate and measure accuracy
