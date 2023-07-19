@@ -19,6 +19,7 @@ on:
       - main
     paths:
       - "host_based/tracer/**"
+      - ".github/workflows/ci_tracer.yml"
 
 
 concurrency:
@@ -79,7 +80,7 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
       - name: Test tracer pintools ${{ matrix.os }}
-        run: cd host_based/tracer/pintool && bash test.sh
+        run: ls -R host_based && cd host_based/tracer/pintool && bash test.sh
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
