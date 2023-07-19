@@ -22,7 +22,10 @@ The idea is to have POC for attacks on Wasm execution scenarios. We add a divers
 
 ## Roadmap for Swivel ones
 
-We fork the original [repo](https://github.com/Jacarte/swivel). The patch to test diversfication can be found there.
+We fork the original [swivel repo](https://github.com/Jacarte/swivel). The patch to test diversification can be found there.
+
+- `swivel-btb-exploit`: https://github.com/Jacarte/swivel-btb-exploit, important things to look at there: `generate_variants.sh`, `get_random_wasm.sh`, `get_bandwidth.sh`. 
+- `safeside`: https://github.com/Jacarte/safeside, important things to look at there: `build-lucet/generate_variants.sh`, `get_random_wasm.sh`, `get_bandwidth.sh`
 
 ## Roadmap for whitebox crypto challenges
 
