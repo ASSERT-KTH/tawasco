@@ -79,8 +79,13 @@ jobs:
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
+      - name: Build pintool again ${{ matrix.os }}
+        run: cd host_based/tracer/pintool && PIN_ROOT="host_based/tracer/pintool/pin" make all
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+
       - name: Test tracer pintools ${{ matrix.os }}
-        run: ls -R host_based && cd host_based/tracer/pintool && bash test.sh
+        run: cd host_based/tracer/pintool && bash test.sh
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
