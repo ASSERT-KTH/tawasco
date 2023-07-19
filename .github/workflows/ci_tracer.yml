@@ -84,6 +84,9 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
 
+      - name: Archive pintool
+        run: gzip pintool-linux.gz -r host_based/tracer/pintool  && mv pintool-linux.gz /pintool-linux.gz
+
       - name: Archive assets
         run: gzip -k -f ${{ matrix.path }} && mv ${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
 
@@ -93,18 +96,27 @@ jobs:
           name: ${{ matrix.asset_name }}.gz
           path: ${{ matrix.asset_name }}.gz
 
+      
+      - name: Upload assets to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pintool-linux.gz
+          path: /pintool-linux.gz
+
       - name: Upload assets to release
         if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GH }}
         run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.asset_name }}.gz
 
-      - name: Upload assets to fixed release
-        if: github.event_name == 'workflow_dispatch'
+
+      - name: Upload assets to release
+        if: github.event_name == 'release'
         env:
-          GITHUB_TOKEN: ${{ secrets.GH }} 
-        run:
-          gh release upload 0.2.4 ${{ matrix.asset_name }}.gz
+          GITHUB_TOKEN: ${{ secrets.GH }}
+        run: gh release upload ${{ github.event.release.tag_name }} /pintool-linux.gz
+
+
           
       - name: Generate asset hash
         run: ${{ matrix.shasum_cmd }} ${{ matrix.asset_name }}.gz | awk '{ print $1 }' > ${{ matrix.asset_name }}.gz.sha256
@@ -120,9 +132,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH }}
         run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.asset_name }}.gz.sha256
-
-      - name: Upload asset hash to fixed release
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH }}
-        run: gh release upload 0.2.4 ${{ matrix.asset_name }}.gz.sha256
