@@ -89,6 +89,7 @@ jobs:
         run: cd host_based/tracer/pintool && bash test.sh
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          ROOT: "${{ github.workspace }}"
 
 
       - name: Archive pintool
