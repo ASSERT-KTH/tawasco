@@ -93,7 +93,7 @@ jobs:
 
 
       - name: Archive pintool
-        run: gzip pintool-linux.gz -r host_based/tracer/pintool  && mv pintool-linux.gz /pintool-linux.gz
+        run: tar zcvf /pintool-linux.gz host_based/tracer/pintool 
 
       - name: Archive assets
         run: gzip -k -f ${{ matrix.path }} && mv ${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
