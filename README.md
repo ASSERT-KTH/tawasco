@@ -52,10 +52,7 @@ To reproduce this attacks and defenses. We propose to use a separated machine. F
 ## Roadmap browser
 
 - [ ] [Port contention side channel](https://cmaurice.fr/pdf/asiaccs22_rokicki.pdf), 
-  - [ ] Implement instruction port contention predictor.
-    - [ ] Support high accurate timer (probably using Firefox version 90 for the POC).
-    - [ ] Crate Wasm binary to execute in the browser.
-    - [x] Create native binary that makes port contention.
-    - [ ] Measures port contention in the browser.
-  - [ ] Create automatic benchmark for measuring predictor accuracy.
-  - [ ] Apply wasm-mutate to the port predictor and the listener. Measure the impact on the accuracy of the predictor.
+- [ ] Web port contention repo here, https://github.com/MIAOUS-group/web-port-contention
+- [ ] CPU Port Contention Without SMT: Sources https://github.com/MIAOUS-group/port-contention-without-smt 
+- [ ] Create automatic benchmark for measuring exfiltration accuracy
+- [ ] Apply wasm-mutate and measure accuracy
