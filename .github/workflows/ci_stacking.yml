@@ -37,7 +37,7 @@ jobs:
         include:
           - name: linux
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
-            path: host_based/stacking/target/x86_64-unknown-linux-gnu/release/stacking
+            path: host_based/target/x86_64-unknown-linux-gnu/release/stacking
             asset_name: stacking-all-x86_64-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             features: --features default
@@ -50,7 +50,7 @@ jobs:
               # target: aarch64-unknown-linux-gnu
           - name: macos
             os: macos-latest
-            path: host_based/stacking/target/x86_64-apple-darwin/release/stacking
+            path: host_based/target/x86_64-apple-darwin/release/stacking
             asset_name: stacking-all-x86_64-macos-${{ github.event.release.tag_name }}
             shasum_cmd: shasum -a 256
             features: --features default
@@ -60,7 +60,7 @@ jobs:
           
           - name: linux-runtime
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
-            path: host_based/stacking/target/x86_64-unknown-linux-gnu/release/stacking
+            path: host_based/target/x86_64-unknown-linux-gnu/release/stacking
             asset_name: stacking-x86_64-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             features: --no-default-features --features only-runtime
@@ -73,7 +73,7 @@ jobs:
               # target: aarch64-unknown-linux-gnu
           - name: macos-runtime
             os: macos-latest
-            path: host_based/stacking/target/x86_64-apple-darwin/release/stacking
+            path: host_based/target/x86_64-apple-darwin/release/stacking
             asset_name: stacking-x86_64-macos-${{ github.event.release.tag_name }}
             shasum_cmd: shasum -a 256
             features: --no-default-features --features only-runtime
