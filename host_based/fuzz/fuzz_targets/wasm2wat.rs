@@ -5,12 +5,10 @@
 #[macro_use] extern crate libfuzzer_sys;
 extern crate arbitrary;
 extern crate env_logger;
-extern crate wasmparser;
 
 use arbitrary::*;
 use libfuzzer_sys::*;
 use std::sync::atomic::{AtomicU64, Ordering};
-use wasmparser::WasmFeatures;
 use std::io::{Read, Write};
 
 static NUM_RUNS: AtomicU64 = AtomicU64::new(0);

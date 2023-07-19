@@ -48,12 +48,12 @@ jobs:
               # asset_name: dtw-tools-arm-linux-${{ github.event.release.tag_name }}
               # shasum_cmd: sha256sum
               # target: aarch64-unknown-linux-gnu
-          - name: macos
-            os: macos-latest
-            path: host_based/tracer/target/x86_64-apple-darwin/release/tracer
-            asset_name: tracer-x86_64-macos-${{ github.event.release.tag_name }}
-            shasum_cmd: shasum -a 256
-            target: x86_64-apple-darwin
+         # - name: macos
+         #   os: macos-latest
+         #   path: host_based/tracer/target/x86_64-apple-darwin/release/tracer
+         #   asset_name: tracer-x86_64-macos-${{ github.event.release.tag_name }}
+         #   shasum_cmd: shasum -a 256
+         #   target: x86_64-apple-darwin
           
 
     steps:
