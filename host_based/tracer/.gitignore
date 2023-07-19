@@ -4,3 +4,4 @@ pin.bin
 obj-*
 *tracer.so
 pin
+pin.log
