@@ -106,7 +106,7 @@ jobs:
 
 
       - name: Build CLI ${{ matrix.os }}
-        run: cd host_based/stacking && cargo +nightly build --release --target ${{ matrix.target }} ${{ matrix.features }}
+        run: cd wasmtime && git submodule update --init && cd ../ && cd host_based/stacking && cargo +nightly build --release --target ${{ matrix.target }} ${{ matrix.features }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
