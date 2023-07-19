@@ -93,7 +93,7 @@ jobs:
 
 
       - name: Archive pintool
-        run: tar zcvf /pintool-linux.gz host_based/tracer/pintool 
+        run: tar zcvf pintool-linux.gz host_based/tracer/pintool 
 
       - name: Archive assets
         run: gzip -k -f ${{ matrix.path }} && mv ${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
@@ -109,7 +109,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: pintool-linux.gz
-          path: /pintool-linux.gz
+          path: pintool-linux.gz
 
       - name: Upload assets to release
         if: github.event_name == 'release'
@@ -122,7 +122,7 @@ jobs:
         if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GH }}
-        run: gh release upload ${{ github.event.release.tag_name }} /pintool-linux.gz
+        run: gh release upload ${{ github.event.release.tag_name }} pintool-linux.gz
 
 
           
