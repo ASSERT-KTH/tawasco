@@ -38,6 +38,10 @@ ofstream TraceFile;
 long long bigcounter=0; // Ready for 4 billions of instructions
 long long currentbbl=0;
 
+INT64 logfilter=0;
+ADDRINT filter_begin=0;
+ADDRINT filter_end=0;
+
 ADDRINT main_begin;
 ADDRINT main_end;
 
@@ -60,10 +64,7 @@ KNOB<BOOL> KnobLogCallArgs(KNOB_MODE_WRITEONCE, "pintool",
 // TODO this
 KNOB<string> KnobLogFilter(KNOB_MODE_WRITEONCE, "pintool",
                         "f", "1", "(0) no filter (1) filter system libraries (2) filter all but main exec (0x400000-0x410000) trace only specified address range");
-KNOB<string> KnobLogFilterLive(KNOB_MODE_WRITEONCE, "pintool",
-                        "F", "0", "(0) no live filter (0x400000:0x410000) use addresses as start:stop live filter");
-KNOB<INT> KnobLogFilterLiveN(KNOB_MODE_WRITEONCE, "pintool",
-                           "n", "0", "which occurence to log, 0=all (only for -F start:stop filter)");
+
 KNOB<BOOL> KnobQuiet(KNOB_MODE_WRITEONCE, "pintool",
                        "q", "0", "be quiet under normal conditions");
 
@@ -83,9 +84,15 @@ INT32 Usage()
 
 BOOL ExcludedAddress(ADDRINT ip)
 {
-    // Wathever is beyond 0x7000
-    //              00000000000
-    //           0x7ffe6e1f0935
+    switch (logfilter)
+    {
+        case 1:
+            return ((ip < filter_begin) || (ip > filter_end));
+            break;
+        default:
+            break;
+    }
+
     return ip >= 0x700000000000;
 }
 
@@ -152,6 +159,7 @@ static VOID RecordMemHuman(ADDRINT ip, CHAR r, ADDRINT addr, UINT8* memdump, INT
 static VOID RecordMem(ADDRINT ip, CHAR r, ADDRINT addr, INT32 size, BOOL isPrefetch)
 {
     UINT8 memdump[256];
+    if(ExcludedAddress(ip)) return;
     if(cannot_trace()) return;
     
     PIN_GetLock(&PINL, ip);
@@ -253,6 +261,7 @@ void ThreadFinish_cb(THREADID threadIndex, const CONTEXT *ctxt, INT32 code, VOID
 
 VOID printInst(ADDRINT ip, string *disass, INT32 size)
 {
+    if(ExcludedAddress(ip)) return;
     if(cannot_trace()) return;
     UINT8 v[32];
     
@@ -512,6 +521,39 @@ int  main(int argc, char *argv[])
     if( PIN_Init(argc,argv) )
     {
         return Usage();
+    }
+
+    // Set the filters
+    char *endptr;
+    const char *tmpfilter = KnobLogFilter.Value().c_str();
+    logfilter=strtoull(tmpfilter, &endptr, 16);
+    if (endptr == tmpfilter) {
+        cerr << "ERR: Failed parsing option -f" <<endl;
+        return 1;
+    }
+   
+    // Then it is a range of address
+    if (logfilter > 0) {
+        filter_begin=logfilter;
+        logfilter = 1;
+        char *endptr2;
+        if (endptr[0] != '-') {
+            cerr << "ERR: Failed parsing option -f" <<endl;
+            return 1;
+        }
+        filter_end=strtoull(endptr+1, &endptr2, 16);
+        if (endptr2 == endptr+1) {
+            cerr << "ERR: Failed parsing option -f" <<endl;
+            return 1;
+        }
+        if (endptr2[0] != '\0') {
+            cerr << "ERR: Failed parsing option -f" <<endl;
+            return 1;
+        }
+        if (filter_end <= filter_begin) {
+            cerr << "ERR: Failed parsing option -f" <<endl;
+            return 1;
+        }
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());
