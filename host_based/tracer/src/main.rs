@@ -177,16 +177,13 @@ pub fn execute_wasm(path: String) {
     // let instance = linker.instantiate(&mut store, &module).unwrap();
 
     let instance = linker.instantiate(&mut store, &module).expect("Module cannot instantiate");
-    unsafe {_mm_mfence();};
-    std::thread::sleep(std::time::Duration::from_millis(1000));
-
+    
     
     let func = instance
             .get_func(&mut store, "_start")
             .unwrap()
             .typed::<(), ()>(&mut store)
             .unwrap();
-    unsafe {_mm_mfence();};
 
     func.call(&mut store, ())
         .unwrap();
