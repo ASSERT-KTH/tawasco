@@ -119,4 +119,5 @@ fn main() {
     println!("cargo:rerun-if-changed=pintool/Makefile");
     println!("cargo:rerun-if-changed=pintool/tracer.cpp");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rustc-link-arg=-fno-stack-protector");
 }

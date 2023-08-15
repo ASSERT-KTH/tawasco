@@ -64,7 +64,7 @@ pub fn custom_file_allocator(size: usize, file: &std::fs::File) -> *mut libc::c_
             STATIC_ADDRESS,
             size,
                 rustix::mm::ProtFlags::READ | rustix::mm::ProtFlags::WRITE,
-                rustix::mm::MapFlags::PRIVATE, // | rustix::mm::MapFlags::FIXED,
+                rustix::mm::MapFlags::PRIVATE | rustix::mm::MapFlags::FIXED,
                 &file,
                 0,
             ).expect("Memory could not be allocated");
@@ -104,6 +104,7 @@ unsafe impl wasmtime::LinearMemory for OwnMemory {
     }
 
     fn grow_to(&mut self, _new_size: usize) -> Result<()> {
+        eprintln!("Memory is growing");
         Ok(())
     }
 
@@ -169,8 +170,27 @@ pub fn get_current_working_dir() -> std::io::Result<std::path::PathBuf> {
 pub fn create_linker(engine: &wasmtime::Engine) -> wasmtime::Linker<wasmtime_wasi::WasiCtx> {
     let mut linker = wasmtime::Linker::new(&engine);
 
-    wasmtime_wasi::add_to_linker(&mut linker, |s| s).unwrap();
+    wasmtime_wasi::add_to_linker(&mut linker, |s|s).unwrap();
     // These methods are not in WASI by default, yet, let us assume they are
     // It is the same assumption of Swivel
     linker.clone()
+}
+
+pub fn disable_aslr() -> Result<(), &'static str> {
+    const ADDR_NO_RANDOMIZE: libc::c_ulong = 0x0040000;
+
+    // Get the current personality
+    let current_personality = unsafe { libc::personality(0xffffffff) };
+    if current_personality == -1 {
+        return Err("Failed to retrieve current personality.");
+    }
+
+    // Set the ADDR_NO_RANDOMIZE flag
+    let new_personality = current_personality as u64 | ADDR_NO_RANDOMIZE;
+    let result = unsafe { libc::personality(new_personality) };
+    if result == -1 {
+        return Err("Failed to set new personality.");
+    }
+
+    Ok(())
 }

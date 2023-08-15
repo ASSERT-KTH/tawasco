@@ -3,8 +3,10 @@ use std::arch::asm;
 use wasmtime_wasi::sync::WasiCtxBuilder;
 extern crate libc;
 use std::sync::Arc;
-use tracer::{MemoryAllocator, get_current_working_dir, create_linker};
+use tracer::{MemoryAllocator, get_current_working_dir, create_linker, disable_aslr};
 
+#[cfg(all(target_arch = "x86_64"))]
+use std::arch::x86_64::_mm_mfence;
 /// # Wasmtime based execution of a wasm binary with IntelPIN tracing.
 /// # Otherwise, the execution is based on a regular Wasm-WASI binary.
 ///
@@ -72,11 +74,20 @@ pub fn execute_wasm(path: String) {
 
     // Remove spectre protection    
     let config = config.cranelift_nan_canonicalization(false);
+    // let config = config.debug_info(true);
     let config = unsafe { config.cranelift_flag_set("enable_heap_access_spectre_mitigation", "no") };
     let config = unsafe { config.cranelift_flag_set("enable_table_access_spectre_mitigation", "no") }; 
     // TODO set this option if flag
     
     let config = config.with_host_memory(Arc::new(allocator));
+    let config = config.parallel_compilation(false);
+    let config = config.static_memory_guard_size(100);
+    let config = config.dynamic_memory_guard_size(100);
+    let config = config.static_memory_maximum_size(100000000);
+    let config = config.static_memory_forced(true);
+    let config = config.max_wasm_stack(10 << 20).async_stack_size(100 << 20);
+    let config = config.memory_init_cow(true);
+    // let config = config.max_wasm_stack(10_000_000); // 10Mb
     let config = config.cranelift_opt_level(wasmtime::OptLevel::None);
     // let mut config = config.parallel_compilation(false);
     let config = config.memory_init_cow(true);
@@ -95,8 +106,7 @@ pub fn execute_wasm(path: String) {
     // Serialize it
     let serialized = module.serialize().unwrap();
     // Save it to disk, get the filename from the argument path
-    std::fs::write(format!("{}.obj", filename), serialized).unwrap();
-
+    std::fs::write(format!("{}.cwasm", filename), serialized).unwrap();
     ////
     let args: Vec<String> = std::env::args().collect();
 
@@ -115,7 +125,11 @@ pub fn execute_wasm(path: String) {
          .unwrap()
         .build();
 
-    let mut linker = create_linker(&engine);
+
+    let mut linker = wasmtime::Linker::new(&engine);
+    wasmtime_wasi::add_to_linker(&mut linker, |s|s).unwrap();
+    unsafe {_mm_mfence();};
+
 
     // TODO to lock the traces should be an option
 
@@ -134,14 +148,18 @@ pub fn execute_wasm(path: String) {
         })
         .unwrap();
 
+    // print the ptr of instance
+    eprintln!("CTX ptr {:p}", &wasi as *const wasmtime_wasi::WasiCtx);
     let mut store = wasmtime::Store::new(&engine, wasi);
     // Thats it
     store.call_hook(/* when the wasm execution starts, then enable the recording */ |_t, tpe|{
         match tpe {
             wasmtime::CallHook::CallingHost => {
+                println!("locking");
                 unsafe {set_lock(1)};
             },
             wasmtime::CallHook::ReturningFromHost => {
+                println!("unlocking");
                 unsafe {set_lock(0)};
             }
             _ => {
@@ -151,29 +169,45 @@ pub fn execute_wasm(path: String) {
         Ok(())
     });
 
-
+        
     eprintln!("Linking module, elapsed {}ms", now.elapsed().as_millis());
-    linker.module(&mut store, "", &module).unwrap();
+    // linker.module(&mut store, "instance", &module).unwrap();
 
     let now = std::time::Instant::now();
     // let instance = linker.instantiate(&mut store, &module).unwrap();
-    let func = linker
-            .get_default(&mut store, "")
+
+    let instance = linker.instantiate(&mut store, &module).expect("Module cannot instantiate");
+    unsafe {_mm_mfence();};
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+
+    
+    let func = instance
+            .get_func(&mut store, "_start")
             .unwrap()
             .typed::<(), ()>(&mut store)
             .unwrap();
+    unsafe {_mm_mfence();};
+
+    func.call(&mut store, ())
+        .unwrap();
     
-            func.call(&mut store, ())
-                .unwrap();
+    // Get the address of the globals in the instance if any
+
 
     eprintln!("Execution elapsed {}ms", now.elapsed().as_millis());
     let now = std::time::Instant::now();
     unsafe {set_lock(1)};
     eprintln!("Locking time {}", now.elapsed().as_millis());
+
+
     eprintln!("-> Finished");
 }
 
 pub fn main() {
+    match disable_aslr() {
+        Ok(_) => println!("ASLR disabled successfully."),
+        Err(e) => eprintln!("Error: {}", e),
+    }
     let now = std::time::Instant::now();
     // Attacjh this process to the shared mem
     unsafe { attach() };
@@ -183,5 +217,5 @@ pub fn main() {
     let path = args.get(1).expect("Pass the wasm file as the first argument");
     eprintln!("Before execution {}ms", now.elapsed().as_millis());
     execute_wasm(path.clone());
-
+    // execute_wasm(path.clone());
 }
