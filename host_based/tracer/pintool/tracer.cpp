@@ -173,6 +173,27 @@ static VOID RecordMemHuman(ADDRINT ip, CHAR r, ADDRINT addr, UINT8* memdump, INT
     // This is a patch since we cannot identify who the hell is 0x55
     //f(isunknown(addr) )
     //    return;
+    /*
+        if ip not from Wasm, exit
+        if addr is weird, exit
+        if addr is sensitive and value is weird, exit
+    */
+
+    if(ip < 0x10000000 || ip > 0x10000000 + 100000000)
+        return;
+    
+    if(addr >= 0x50000000)
+        return;
+
+    if(first_stack_call){
+       ADDRINT relativePosition = first_stack_call - addr;
+       if (addr < first_stack_call && relativePosition <= 100000000 /* 10Mb is a reasonable?*/) {
+            // The address is likely within the stack
+            // If the value is weird...then exit
+            if((*(UINT64*)memdump ) >= 0x50000000)
+                return;
+        }
+    }
 
     TraceFile << "[" << r << "]" << setw(10) << dec << bigcounter << getrelative(ip) << "                                                   "
               << " " << getrelative(addr) << " size="
