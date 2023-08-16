@@ -71,6 +71,13 @@ KNOB<BOOL> KnobLogIns(KNOB_MODE_WRITEONCE, "pintool",
                       "i", "1", "log all instructions");
 KNOB<BOOL> KnobLogMem(KNOB_MODE_WRITEONCE, "pintool",
                       "m", "1", "log all memory accesses");
+
+KNOB<BOOL> KnobLogMemIp(KNOB_MODE_WRITEONCE, "pintool",
+                      "M", "1", "Log memory instruction leading to a memory access");
+
+KNOB<BOOL> KnobFilterWeird(KNOB_MODE_WRITEONCE, "pintool",
+                      "Y", "1", "Filter weird memory accesses related to stack slots");
+
 KNOB<BOOL> KnobLogBB(KNOB_MODE_WRITEONCE, "pintool",
                      "b", "1", "log all basic blocks");
 KNOB<BOOL> KnobLogCall(KNOB_MODE_WRITEONCE, "pintool",
@@ -179,27 +186,34 @@ static VOID RecordMemHuman(ADDRINT ip, CHAR r, ADDRINT addr, UINT8* memdump, INT
         if addr is sensitive and value is weird, exit
     */
 
-    if(ip < 0x10000000 || ip > 0x10000000 + 100000000)
-        return;
-    
-    
-    if(first_stack_call){
-       ADDRINT relativePosition = first_stack_call - addr;
-       if (addr < first_stack_call && relativePosition <= 100000000 /* 10Mb is a reasonable?*/) {
-            // The address is likely within the stack
-            // If the value is weird...then exit
-            if((*(UINT32*)memdump ) >= 0x50000000)
-                return;
-        } else {
-            if(addr >= 0x50000000) {
-                // The address is weird
-                return;
+    if(KnobFilterWeird.Value()){
+        
+        if(ip < 0x10000000 || ip > 0x10000000 + 100000000)
+            return;
+        
+        
+        if(first_stack_call){
+        ADDRINT relativePosition = first_stack_call - addr;
+        if (addr < first_stack_call && relativePosition <= 100000000 /* 10Mb is a reasonable?*/) {
+                // The address is likely within the stack
+                // If the value is weird...then exit
+                if((*(UINT32*)memdump ) >= 0x50000000)
+                    return;
+            } else {
+                if(addr >= 0x50000000) {
+                    // The address is weird
+                    return;
+                }
             }
         }
     }
 
-    TraceFile << "[" << r << "]" << setw(10) << dec << bigcounter << getrelative(ip) << "                                                   "
-              << " " << getrelative(addr) << " size="
+    TraceFile << "[" << r << "]" << setw(10) << dec;
+    
+    if(KnobLogMemIp.Value()){
+        TraceFile << bigcounter << getrelative(ip) << "                                                   ";
+    }
+    TraceFile << " " << getrelative(addr) << " size="
               << dec << setw(2) << size << " value="
               << hex << setw(18-2*size);
     if (!isPrefetch)
