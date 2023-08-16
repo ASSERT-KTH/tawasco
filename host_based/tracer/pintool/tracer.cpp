@@ -182,16 +182,19 @@ static VOID RecordMemHuman(ADDRINT ip, CHAR r, ADDRINT addr, UINT8* memdump, INT
     if(ip < 0x10000000 || ip > 0x10000000 + 100000000)
         return;
     
-    if(addr >= 0x50000000)
-        return;
-
+    
     if(first_stack_call){
        ADDRINT relativePosition = first_stack_call - addr;
        if (addr < first_stack_call && relativePosition <= 100000000 /* 10Mb is a reasonable?*/) {
             // The address is likely within the stack
             // If the value is weird...then exit
-            if((*(UINT64*)memdump ) >= 0x50000000)
+            if((*(UINT32*)memdump ) >= 0x50000000)
                 return;
+        } else {
+            if(addr >= 0x50000000) {
+                // The address is weird
+                return;
+            }
         }
     }
 
