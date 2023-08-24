@@ -481,6 +481,7 @@ fn main() -> Result<(), anyhow::Error> {
     }
     let mut C = 0;
 
+    let now = std::time::Instant::now();
     loop {
         let opsclone = opts.clone();
         if opts.chaos_mode {
@@ -514,6 +515,8 @@ fn main() -> Result<(), anyhow::Error> {
                     if let Some(oracle) = &opsclone.oracle {
                         if call_oracle(oracle.clone(), format!("{}{}.cwasm", opts.output.to_str().unwrap(), hash)) {
                             // The oracle returned 1, we stop
+                            let elapsed = now.elapsed();
+                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
@@ -551,6 +554,8 @@ fn main() -> Result<(), anyhow::Error> {
                     if let Some(oracle) = &opsclone.oracle {
                         if call_oracle(oracle.clone(), format!("{}.{}.cwasm", opts.output.to_str().unwrap(), index)) {
                             // The oracle returned 1, we stop
+                            let elapsed = now.elapsed();
+                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
