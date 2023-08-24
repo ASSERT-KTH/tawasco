@@ -400,8 +400,9 @@ fn call_oracle(oracle: String, wasm_file: String) -> bool {
     let command = oracle.split(" ").collect::<Vec<_>>();
     /// The arguments are the rest of the command
     let args = &command[1..];
+    eprintln!("Executing oracle {} {}", oracle, wasm_file);
     /// We call a subprocess and check its exist code
-    let output = std::process::Command::new(&oracle)
+    let output = std::process::Command::new(&command[0])
         .args(args)
         .arg(wasm_file)
         .stdin(std::process::Stdio::null())
@@ -510,10 +511,20 @@ fn main() -> Result<(), anyhow::Error> {
                     // TODO check if it was already serialized, avoid compiling again
                     let serialized = module.serialize().unwrap();
                     // Save it to disk, get the filename from the argument path
-                    std::fs::write(format!("{}{}.cwasm", opts.output.to_str().unwrap(), hash), serialized).unwrap();
+                    std::fs::write(format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash), serialized).unwrap();
 
                     if let Some(oracle) = &opsclone.oracle {
-                        if call_oracle(oracle.clone(), format!("{}{}.cwasm", opts.output.to_str().unwrap(), hash)) {
+                        if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash)) {
+                            // The oracle returned 1, we stop
+                            let elapsed = now.elapsed();
+                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
+                            eprintln!("Oracle returned 1, we stop");
+                            std::process::exit(0);
+                        }
+                    }
+                } else {
+                    if let Some(oracle) = &opsclone.oracle {
+                        if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.wasm", opts.output.to_str().unwrap(), hash2, hash)) {
                             // The oracle returned 1, we stop
                             let elapsed = now.elapsed();
                             eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
@@ -553,6 +564,16 @@ fn main() -> Result<(), anyhow::Error> {
 
                     if let Some(oracle) = &opsclone.oracle {
                         if call_oracle(oracle.clone(), format!("{}.{}.cwasm", opts.output.to_str().unwrap(), index)) {
+                            // The oracle returned 1, we stop
+                            let elapsed = now.elapsed();
+                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
+                            eprintln!("Oracle returned 1, we stop");
+                            std::process::exit(0);
+                        }
+                    }
+                }else {
+                    if let Some(oracle) = &opsclone.oracle {
+                        if call_oracle(oracle.clone(), format!("{}.{}.wasm", opts.output.to_str().unwrap(), index)) {
                             // The oracle returned 1, we stop
                             let elapsed = now.elapsed();
                             eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
@@ -886,8 +907,11 @@ mod eval {
             (Some((mem1, glob1,  stdout1, stderr1, _mod1, instance1, time1)), Some((mem2, glob2,  stdout2, stderr2, _mod2, instance2, time2)))
                 => {
 
-                    if stdout1 != stdout2 || stderr1 != stderr2 {
+                    if (stdout1 != stdout2) || (stderr1 != stderr2) {
                         eprintln!("Std is not the same");
+                        eprintln!("{:?}\n======\n{:?}", stdout1, stdout2);
+                        eprintln!("Stderr is not the same");
+                        eprintln!("{:?}\n======\n{:?}", stderr1, stderr2);
                         return None;
                     }
                     // Now we compare the stores
