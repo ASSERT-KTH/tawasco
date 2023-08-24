@@ -514,23 +514,28 @@ fn main() -> Result<(), anyhow::Error> {
                     std::fs::write(format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash), serialized).unwrap();
 
                     if let Some(oracle) = &opsclone.oracle {
+                        // Pause the timer to skip oracle time
+                        let elapsed = now.elapsed();
                         if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash)) {
-                            // The oracle returned 1, we stop
-                            let elapsed = now.elapsed();
                             eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
+                        // Resume the timer
+                        let elapsed = now.elapsed();
                     }
                 } else {
                     if let Some(oracle) = &opsclone.oracle {
+                        let elapsed = now.elapsed();
+
                         if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.wasm", opts.output.to_str().unwrap(), hash2, hash)) {
                             // The oracle returned 1, we stop
                             let elapsed = now.elapsed();
-                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
+                        let elapsed = now.elapsed();
+
                     }
                 }
 
