@@ -26,7 +26,7 @@ th=10.0
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
 # check if the md5sum is the same
-if (( $(echo "$diffy >= $th" | bc -l) ))
+if (( $(echo "$diffy <= $th" | bc -l) ))
 then
     echo "Dif trace"
     exit 1
