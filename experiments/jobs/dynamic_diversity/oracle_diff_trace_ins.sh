@@ -8,7 +8,7 @@ function sim(){
    different_lines=$(diff -U 0 $tr1 $tr2 | grep -v ^@ | wc -l)
    total_lines=$(wc -l < $tr1) && total_lines=$((total_lines + $(wc -l < $tr2)))
    #similarity=$((100 - (100 * diff_lines) / total_lines))
-   similarity=$(echo "scale=12; (100.0 - (100.0 * 24.0) / $total_lines)" | bc)
+   similarity=$(echo "scale=12; (100.0 - (100.0 * $different_lines) / $total_lines)" | bc)
    echo $similarity
 }
 
@@ -27,7 +27,7 @@ th=10.0
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
 # check if the md5sum is the same
-if (( $(echo "$diffy >= $th" | bc -1) ))
+if (( $(echo "$diffy >= $th" | bc -l) ))
 then
     echo "Dif trace"
     exit 1
