@@ -183,6 +183,8 @@ pub struct Stacking {
     check_mem: bool,
     // The hashes will prevent regression and non performed transformations
     hashes: sled::Db,
+    // The hashes will prevent regression on already generated machine code
+    mc_hashes: sled::Db,
     chaos_mode: bool,
     variants_per_parent: usize,
     no_preserve_semantics: bool,
@@ -213,10 +215,16 @@ impl Stacking {
         // Remove db if exist
         if remove_cache {
             std::fs::remove_dir_all(&cache_dir.clone());
+            std::fs::remove_dir_all(format!("{}.mc", cache_dir.clone().to_owned()));
         }
 
         let config = sled::Config::default()
             .path(cache_dir.clone().to_owned())
+            .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
+
+
+        let config2 = sled::Config::default()
+            .path(format!("{}.mc", cache_dir.clone().to_owned()))
             .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
 
         let original_state = if check_io {
@@ -249,6 +257,7 @@ impl Stacking {
             variants_per_parent,
             // Set the cache size to 3GB
             hashes: config.open().expect("Could not create external cache"),
+            mc_hashes: config2.open().expect("Could not create external cache for MC"),
             save_compiling,
             no_preserve_semantics,
             args_generator,
@@ -564,10 +573,12 @@ fn main() -> Result<(), anyhow::Error> {
     // The timer starts
     let mut stat = Stat::new();
     let stat = std::cell::RefCell::new(stat);
+    let mc_hashes = std::cell::RefCell::new(stack.mc_hashes.clone());
     //stat.borrow_mut().pause();
     loop {
         let opsclone = opts.clone();
         let mut stat_clone = stat.clone();
+        let mut mc_hashescp = mc_hashes.clone();
         let output = &opts.output;
         if opts.chaos_mode {
             stack.next(move |new, parent, c| {
@@ -603,13 +614,26 @@ fn main() -> Result<(), anyhow::Error> {
 
                     let serialization_hash = blake3::hash(&serialized);
 
-                    let call_oracle_if_diff =
-                        if opsclone.report_only_if_diff_mc && serialization_hash != original_hash {
-                            eprintln!("New MC hash: {}", serialization_hash);
-                            eprintln!("Original MC hash: {}", original_hash);
-                            eprintln!("MC hash changed, we call the oracle then");
-                            stat_clone.borrow_mut().unique_machine_codes += 1;
-                            true
+                    let call_oracle_if_diff = if opsclone.report_only_if_diff_mc && serialization_hash != original_hash {
+                            // Check if the hash is not in the external cache
+                            let hashbytes = serialization_hash.as_bytes();
+                            if !mc_hashescp.borrow_mut().contains_key(hashbytes).unwrap() {
+                                eprintln!("New MC hash: {}", serialization_hash);
+                                eprintln!("Original MC hash: {}", original_hash);
+                                eprintln!("MC hash changed, we call the oracle then");
+                                stat_clone.borrow_mut().unique_machine_codes += 1;
+                                let _ = mc_hashescp
+                                            .borrow_mut()
+                                            .insert(hashbytes, b"")
+                                            .expect("Failed to insert");
+
+
+                                true
+                            }
+                            else {
+                              false
+                            }
+
                         } else {
                             false
                         };
