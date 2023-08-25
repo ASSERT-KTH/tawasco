@@ -3,6 +3,7 @@
 use anyhow::Context;
 use clap::Parser;
 use core::sync::atomic::Ordering::{Relaxed, SeqCst};
+use pausable_clock::PausableClock;
 use rand::rngs::SmallRng;
 use rand::Rng;
 use rand::SeedableRng;
@@ -68,12 +69,9 @@ struct Options {
     #[arg(long = "chaos-mode", default_value = "false")]
     chaos_mode: bool,
 
-
-
     /// If true, checks consistency between original and variant memories
     #[arg(long = "check-mem", default_value = "false")]
     check_mem: bool,
-
 
     /// Take X variants from parent only. Only available if chaos mode is true
     #[arg(long = "variants-per-parent", default_value = "10")]
@@ -82,7 +80,6 @@ struct Options {
     /// Uses wasm-mutate preserving semantics
     #[arg(long = "no-preserve-semantics", default_value = "false", action)]
     no_preserve_semantics: bool,
-
 
     /// Saves the default compiled Wasm binary
     #[arg(long = "save-compiling", default_value = "false", action)]
@@ -109,9 +106,63 @@ struct Options {
 
     /// We diversify until the oracle returns exit code 1
     /// The oracle will be launched as a subprocess, e.g. `--oracle bash size_larger_1Mb.sh`
-    /// The input of the oracle script is the wasm binary file 
+    /// The input of the oracle script is the wasm binary file
     #[arg(long = "oracle")]
     oracle: Option<String>,
+
+    /// If true, only Wasm binaroes producing different machine codes thatn the original will be reported
+    /// If true, the oracle will be called only if the machine code is different
+    #[arg(long = "report-only-if-diff-mc", default_value = "false", action)]
+    report_only_if_diff_mc: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct Stat {
+    /// To measure the time invested in mutating
+    #[serde(skip)]
+    pub timer: Arc<PausableClock>,
+    #[serde(skip)]
+    now: std::time::Instant,
+    /// To number of rotations
+    pub total_rotations: usize,
+
+    elapsed_nanos: u128,
+
+    /// Number of generated binaries
+    pub generated_binaries: usize,
+
+    /// Number of unique generated machine codes
+    pub unique_machine_codes: usize,
+}
+
+impl Stat {
+    pub fn new() -> Self {
+        Self {
+            timer: Arc::new(PausableClock::default()),
+            total_rotations: 0,
+            elapsed_nanos: 0,
+            now: std::time::Instant::now(),
+            generated_binaries: 0,
+            unique_machine_codes: 0,
+        }
+    }
+
+    pub fn pause(self: &mut Self) {
+        self.timer.pause();
+    }
+
+    pub fn unpause(self: &mut Self) {
+        self.timer.resume();
+    }
+
+    pub fn get_nanos(&self) -> u128 {
+        (std::time::Instant::from(self.timer.now()) - self.now).as_nanos()
+    }
+
+    pub fn serialize(&mut self) -> String {
+        self.elapsed_nanos = self.get_nanos();
+        serde_json::to_string(self).unwrap()
+    }
 }
 
 fn swap(current: &mut Vec<u8>, new_interesting: Vec<u8>) {
@@ -137,7 +188,7 @@ pub struct Stacking {
     no_preserve_semantics: bool,
     save_compiling: bool,
     args_generator: Option<String>,
-    oracle: Option<String>
+    oracle: Option<String>,
 }
 
 impl Stacking {
@@ -157,7 +208,7 @@ impl Stacking {
         save_compiling: bool,
         no_preserve_semantics: bool,
         args_generator: Option<String>,
-        oracle: Option<String>
+        oracle: Option<String>,
     ) -> Self {
         // Remove db if exist
         if remove_cache {
@@ -169,7 +220,7 @@ impl Stacking {
             .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
 
         let original_state = if check_io {
-            match eval::execute_single(&current, check_args.clone(), fuel) {
+            match eval::execute_single(&current, check_args.clone(), fuel, true) {
                 Some(it) => {
                     eprintln!("Original time {}ns", it.6.as_nanos());
                     Some(it)
@@ -202,22 +253,22 @@ impl Stacking {
             no_preserve_semantics,
             args_generator,
             check_io,
-            oracle
+            oracle,
         }
     }
 
-    pub fn next(&mut self, chaos_cb: impl Fn(&Vec<u8>, &Vec<u8>),) {
+    pub fn next(&mut self, chaos_cb: impl Fn(&Vec<u8>, &Vec<u8>, usize)) {
         // Mutate
         let mut wasmmutate = WasmMutate::default();
         let mut wasmmutate = wasmmutate.preserve_semantics(!self.no_preserve_semantics);
 
         let seed = self.rnd.gen();
         eprintln!("Seed {}", seed);
-        let mut wasmmutate = wasmmutate.seed(seed);
+        let wasmmutate = wasmmutate.seed(seed);
         let cp = self.current.clone();
         let origwasm = cp.0.clone();
         let wasm = wasmmutate.run(&origwasm);
-        // 
+        //
 
         // chaos_cb(&origwasm, &self.original);
 
@@ -236,7 +287,7 @@ impl Stacking {
                             if let Ok(true) = self.hashes.contains_key(&hash) {
                                 // eprintln!("Already contained");
                                 // We already generated this hash, so we skip it
-                                
+
                                 continue;
                             }
 
@@ -247,24 +298,27 @@ impl Stacking {
                                     self.check_args.clone(),
                                     self.fuel,
                                     self.check_mem,
-                                    self.args_generator.clone()
+                                    self.args_generator.clone(),
                                 ) {
                                     Some(st) => {
-
                                         // The val is the value is the wasm + the hash of the previous one
-                                        let val = vec![self.index.to_le_bytes().to_vec(), b.clone()].concat();
-                                        let _ = self.hashes.insert(hash, val).expect("Failed to insert");
+                                        let val =
+                                            vec![self.index.to_le_bytes().to_vec(), b.clone()]
+                                                .concat();
+                                        let _ = self
+                                            .hashes
+                                            .insert(hash, val)
+                                            .expect("Failed to insert");
 
                                         // Execute to see semantic equivalence
 
                                         if self.chaos_mode {
                                             // TODO if chaos mode...select from the DB ?
-                                            let random_item = self.rnd.gen_range(0..self.hashes.len());
-                                            
-                                            match self.hashes.iter().take(random_item)
-                                            .next() {
-                                                Some(random_item) => {
+                                            let random_item =
+                                                self.rnd.gen_range(0..self.hashes.len());
 
+                                            match self.hashes.iter().take(random_item).next() {
+                                                Some(random_item) => {
                                                     match random_item {
                                                         Ok(random_item) => {
                                                             let k = random_item.0;
@@ -273,48 +327,60 @@ impl Stacking {
                                                             // The val is the value is the wasm + the index in le bytes
                                                             let index = random_curr[0..8].to_vec();
                                                             let wasm = random_curr[8..].to_vec();
-                                                            self.current = (wasm, usize::from_le_bytes(index.as_slice().try_into().unwrap()));
-                                                            self.index  = self.current.1 + 1;
-                                                        
-                                                            eprintln!("=== CHAOS {}", self.index - 1);
-                                                            eprintln!("=== CHAOS COUNT {}", self.hashes.len());
+                                                            self.current = (
+                                                                wasm,
+                                                                usize::from_le_bytes(
+                                                                    index
+                                                                        .as_slice()
+                                                                        .try_into()
+                                                                        .unwrap(),
+                                                                ),
+                                                            );
+                                                            self.index = self.current.1 + 1;
+
+                                                            eprintln!(
+                                                                "=== CHAOS {}",
+                                                                self.index - 1
+                                                            );
+                                                            eprintln!(
+                                                                "=== CHAOS COUNT {}",
+                                                                self.hashes.len()
+                                                            );
                                                             // Generate the file here already
-                                                            chaos_cb(&b, &origwasm);
+                                                            chaos_cb(
+                                                                &b,
+                                                                &origwasm,
+                                                                self.hashes.len(),
+                                                            );
                                                             continue;
                                                         }
                                                         Err(e) => {
                                                             eprintln!("Error {}", e);
                                                             // We could not mutate the wasm, we skip it
-                                                            continue
+                                                            continue;
                                                         }
                                                     }
                                                 }
-                                                None => {
-                                                    continue
-                                                }
+                                                None => continue,
                                             };
-
                                         } else {
-                                            
                                             self.current = (b.clone(), self.index + 1);
                                             self.index += 1;
-                
+
                                             if self.index % 10000 == 9999 {
                                                 eprintln!("{} mutations", self.index);
                                             }
-                
+
                                             eprintln!("=== TRANSFORMED {}", self.index);
 
                                             if self.index % self.step == 0 {
                                                 // Call the cb
-                                                chaos_cb(&b, &origwasm);
+                                                chaos_cb(&b, &origwasm, self.index);
                                             }
                                             break;
                                         }
                                     }
-                                    None => {
-                                        
-                                    }
+                                    None => {}
                                 }
                             } else {
                                 eprintln!("Not initial state");
@@ -322,11 +388,9 @@ impl Stacking {
                                     if self.chaos_mode {
                                         // TODO if chaos mode...select from the DB ?
                                         let random_item = self.rnd.gen_range(0..self.hashes.len());
-                                        
-                                        match self.hashes.iter().take(random_item)
-                                        .next() {
-                                            Some(random_item) => {
 
+                                        match self.hashes.iter().take(random_item).next() {
+                                            Some(random_item) => {
                                                 match random_item {
                                                     Ok(random_item) => {
                                                         let k = random_item.0;
@@ -335,41 +399,48 @@ impl Stacking {
                                                         // The val is the value is the wasm + the index in le bytes
                                                         let index = random_curr[0..8].to_vec();
                                                         let wasm = random_curr[8..].to_vec();
-                                                        self.current = (wasm, usize::from_le_bytes(index.as_slice().try_into().unwrap()));
-                                                        self.index  = self.current.1 + 1;
-                                                    
+                                                        self.current = (
+                                                            wasm,
+                                                            usize::from_le_bytes(
+                                                                index
+                                                                    .as_slice()
+                                                                    .try_into()
+                                                                    .unwrap(),
+                                                            ),
+                                                        );
+                                                        self.index = self.current.1 + 1;
+
                                                         eprintln!("=== CHAOS {}", self.index - 1);
-                                                        eprintln!("=== CHAOS COUNT {}", self.hashes.len());
+                                                        eprintln!(
+                                                            "=== CHAOS COUNT {}",
+                                                            self.hashes.len()
+                                                        );
                                                         // Generate the file here already
-                                                        chaos_cb(&b, &origwasm);
+                                                        chaos_cb(&b, &origwasm, self.hashes.len());
                                                         continue;
                                                     }
                                                     Err(e) => {
                                                         eprintln!("Error {}", e);
                                                         // We could not mutate the wasm, we skip it
-                                                        continue
+                                                        continue;
                                                     }
                                                 }
                                             }
-                                            None => {
-                                                continue
-                                            }
+                                            None => continue,
                                         };
-
                                     } else {
-                                        
                                         self.current = (b.clone(), self.index + 1);
                                         self.index += 1;
-            
+
                                         if self.index % 10000 == 9999 {
                                             eprintln!("{} mutations", self.index);
                                         }
-            
+
                                         eprintln!("=== TRANSFORMED {}", self.index);
 
                                         if self.index % self.step == 0 {
                                             // Call the cb
-                                            chaos_cb(&b, &origwasm);
+                                            chaos_cb(&b, &origwasm, self.index);
                                         }
                                         break;
                                     }
@@ -377,7 +448,6 @@ impl Stacking {
                                     panic!("To check IO the original state must be set (the original  program should be executable)");
                                 }
                             }
-                            
                         }
                         Err(e) => {
                             eprintln!("Error {}", e);
@@ -411,12 +481,11 @@ fn call_oracle(oracle: String, wasm_file: String) -> bool {
         .output()
         .expect("Failed to run command");
 
-    
     let cp = output.clone();
     // Decode stdout as string
     let stdout = String::from_utf8(cp.stdout).expect("Could not decode output");
     let stderr = String::from_utf8(cp.stderr).expect("Could not decode stderr");
-    
+
     eprintln!("Oracle stdout {}", stdout);
     eprintln!("Oracle stderr {}", stderr);
 
@@ -454,7 +523,7 @@ fn main() -> Result<(), anyhow::Error> {
         opsclone.save_compiling,
         opsclone.no_preserve_semantics,
         opsclone.args_generator,
-        opsclone.oracle
+        opsclone.oracle,
     );
 
     if opsclone.print_meta {
@@ -468,7 +537,10 @@ fn main() -> Result<(), anyhow::Error> {
         println!("Name: {}", opts.input.display());
         println!("Function Count: {}", sectionreader.count());
         // Calculating the total number of instructions
-        let readers = sectionreader.into_iter().collect::<Result<Vec<_>, _>>().unwrap();
+        let readers = sectionreader
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
         let mut total_instructions = 0;
         for reader in &readers {
             let mut reader = reader.get_operators_reader().unwrap();
@@ -478,27 +550,38 @@ fn main() -> Result<(), anyhow::Error> {
             }
         }
         println!("Instructions count: {}", total_instructions);
-        return Ok(())
+        return Ok(());
     }
     let mut C = 0;
 
-    let now = std::time::Instant::now();
-    let mut total_elapsed_millis = 0;
+    let original_hash = blake3::hash(
+        &stack
+            .original_state
+            .clone()
+            .expect("Original state could not be retrieved")
+            .7,
+    );
+    // The timer starts
+    let mut stat = Stat::new();
+    let stat = std::cell::RefCell::new(stat);
+    //stat.borrow_mut().pause();
     loop {
         let opsclone = opts.clone();
+        let mut stat_clone = stat.clone();
+        let output = &opts.output;
         if opts.chaos_mode {
-            stack.next(|new, parent|{
+            stack.next(move |new, parent, c| {
                 let hash = blake3::hash(&new);
                 let hash2 = blake3::hash(&parent);
-                let name = format!("{}.{}.{}.chaos.wasm", opts.output.to_str().unwrap(), hash2, hash);
+                let name = format!("{}.{}.{}.chaos.wasm", output.display(), hash2, hash);
                 // Write the current to fs
-                std::fs::write(&name, new)
-                    .expect("Could not write the output file");
-                
+                std::fs::write(&name, new).expect("Could not write the output file");
+                stat_clone.borrow_mut().generated_binaries += 1;
 
-                
                 // Also save the cwasm
                 if opts.save_compiling {
+                    // We pause the stat to avoid counting the compilation time
+                    stat_clone.borrow_mut().pause();
                     let mut config = wasmtime::Config::default();
                     let config = config.strategy(wasmtime::Strategy::Cranelift);
                     // We need to save the generated machine code to disk
@@ -509,47 +592,82 @@ fn main() -> Result<(), anyhow::Error> {
                     let module = wasmtime::Module::new(&engine, &new).unwrap();
 
                     // Serialize it
-                    // TODO check if it was already serialized, avoid compiling again
+                    // check if it was already serialized, avoid compiling again
                     let serialized = module.serialize().unwrap();
                     // Save it to disk, get the filename from the argument path
-                    std::fs::write(format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash), serialized).unwrap();
+                    std::fs::write(
+                        format!("{}.{}.{}.chaos.cwasm", output.display(), hash2, hash),
+                        serialized.clone(),
+                    )
+                    .unwrap();
 
+                    let serialization_hash = blake3::hash(&serialized);
+
+                    let call_oracle_if_diff =
+                        if opsclone.report_only_if_diff_mc && serialization_hash != original_hash {
+                            eprintln!("New MC hash: {}", serialization_hash);
+                            eprintln!("Original MC hash: {}", original_hash);
+                            eprintln!("MC hash changed, we call the oracle then");
+                            stat_clone.borrow_mut().unique_machine_codes += 1;
+                            true
+                        } else {
+                            false
+                        };
+
+                    stat_clone.borrow_mut().unpause();
                     if let Some(oracle) = &opsclone.oracle {
-                        // Pause the timer to skip oracle time
-                        let elapsed = now.elapsed();
-                        total_elapsed_millis += elapsed.as_millis();
-                        if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.cwasm", opts.output.to_str().unwrap(), hash2, hash)) {
-                            eprintln!("Elapsed time until oracle: {}ms", total_elapsed_millis);
-                            eprintln!("Oracle returned 1, we stop");
-                            std::process::exit(0);
+                        if call_oracle_if_diff || !opsclone.report_only_if_diff_mc {
+                            // Pause the timer to skip oracle time
+                            eprintln!("Time before {}", stat_clone.borrow().get_nanos());
+                            stat_clone.borrow_mut().pause();
+                            if call_oracle(
+                                oracle.clone(),
+                                format!("{}.{}.{}.chaos.wasm", output.display(), hash2, hash),
+                            ) {
+                                eprintln!(
+                                    "Elapsed time until oracle: {}ns",
+                                    stat_clone.borrow().get_nanos()
+                                );
+                                stat_clone.borrow_mut().pause();
+                                stat_clone.borrow_mut().generated_binaries = c;
+                                eprintln!("Oracle returned 1, we stop");
+                                // Save the stat struct as a json
+                                let mut stat = stat_clone.borrow().clone();
+                                let stat = stat.serialize();
+                                // Save to file
+                                let jsonname = format!("{}.chaos.json", output.display());
+                                std::fs::write(jsonname, stat).unwrap();
+                                std::process::exit(0);
+                            }
+                            // Resume the timer
+                            stat_clone.borrow_mut().unpause();
                         }
-                        // Resume the timer
-                        let elapsed = now.elapsed();
                     }
                 } else {
                     if let Some(oracle) = &opsclone.oracle {
-                        let elapsed = now.elapsed();
-                        total_elapsed_millis += elapsed.as_millis();
-                        if call_oracle(oracle.clone(), format!("{}.{}.{}.chaos.wasm", opts.output.to_str().unwrap(), hash2, hash)) {
+                        stat_clone.borrow_mut().pause();
+                        if call_oracle(
+                            oracle.clone(),
+                            format!("{}.{}.{}.chaos.wasm", output.display(), hash2, hash),
+                        ) {
                             // The oracle returned 1, we stop
-                            eprintln!("Elapsed time until oracle: {}ms", total_elapsed_millis);
+                            eprintln!(
+                                "Elapsed time until oracle: {}ns",
+                                stat_clone.borrow().get_nanos()
+                            );
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
-                        let elapsed = now.elapsed();
-
+                        stat_clone.borrow_mut().unpause();
                     }
                 }
-
             });
         } else {
             let index = stack.index;
-            stack.next(|new, parent|{
-                let name = format!("{}.{}.wasm", opts.output.to_str().unwrap(), index);
+            stack.next(move |new, parent, c| {
+                let name = format!("{}.{}.wasm", output.display(), index);
                 // Write the current to fs
-                std::fs::write(&name, new.clone())
-                    .expect("Could not write the output file");
-
+                std::fs::write(&name, new.clone()).expect("Could not write the output file");
 
                 eprintln!("=== STACKED");
 
@@ -557,57 +675,59 @@ fn main() -> Result<(), anyhow::Error> {
                     let mut config = wasmtime::Config::default();
                     let config = config.strategy(wasmtime::Strategy::Cranelift);
                     // We need to save the generated machine code to disk
-    
+
                     // Create a new store
                     let engine = wasmtime::Engine::new(&config).unwrap();
-    
+
                     let module = wasmtime::Module::new(&engine, &new.clone()).unwrap();
-    
+
                     // Serialize it
                     // TODO check if it was already serialized, avoid compiling again
                     let serialized = module.serialize().unwrap();
                     // Save it to disk, get the filename from the argument path
-                    std::fs::write(format!("{}.{}.cwasm", opts.output.to_str().unwrap(), index), serialized).unwrap();
+                    std::fs::write(format!("{}.{}.cwasm", output.display(), index), serialized)
+                        .unwrap();
 
                     if let Some(oracle) = &opsclone.oracle {
-                        if call_oracle(oracle.clone(), format!("{}.{}.cwasm", opts.output.to_str().unwrap(), index)) {
+                        if call_oracle(
+                            oracle.clone(),
+                            format!("{}.{}.cwasm", output.display(), index),
+                        ) {
                             // The oracle returned 1, we stop
-                            let elapsed = now.elapsed();
-                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
+                            // eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
                     }
-                }else {
+                } else {
                     if let Some(oracle) = &opsclone.oracle {
-                        if call_oracle(oracle.clone(), format!("{}.{}.wasm", opts.output.to_str().unwrap(), index)) {
+                        if call_oracle(
+                            oracle.clone(),
+                            format!("{}.{}.wasm", output.display(), index),
+                        ) {
                             // The oracle returned 1, we stop
-                            let elapsed = now.elapsed();
-                            eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
+                            // eprintln!("Elapsed time until oracle: {}s", elapsed.as_millis());
                             eprintln!("Oracle returned 1, we stop");
                             std::process::exit(0);
                         }
                     }
                 }
-
             });
 
             if stack.index >= opts.count {
                 break;
             }
         }
-
     }
 
     // Assert that we have X different mutations
     // assert!(stack.hashes.len() == opts.count);
 
     // Write the current to fs
-    if !opts.chaos_mode{
+    if !opts.chaos_mode {
         std::fs::write(&opts.output, stack.current.0).expect("Could not write the output file");
     }
     Ok(())
-
 }
 
 // Somesort of the same as wasm-mutate fuzz
@@ -622,30 +742,27 @@ mod eval {
     #[cfg(all(target_arch = "x86_64"))]
     use std::arch::x86_64::_rdtsc as builtin_rdtsc;
 
-
-    #[cfg(all(target_arch="x86_64"))]
+    #[cfg(all(target_arch = "x86_64"))]
     pub fn _rdtsc() -> u64 {
         let eax: u32;
-      let ecx: u32;
-      let edx: u32;
-      {
-        unsafe {
-          asm!(
-            "rdtscp",
-            lateout("eax") eax,
-            lateout("ecx") ecx,
-            lateout("edx") edx,
-            options(nomem, nostack)
-          );
+        let ecx: u32;
+        let edx: u32;
+        {
+            unsafe {
+                asm!(
+                  "rdtscp",
+                  lateout("eax") eax,
+                  lateout("ecx") ecx,
+                  lateout("edx") edx,
+                  options(nomem, nostack)
+                );
+            }
         }
-      }
 
-
-      let counter: u64 = (edx as u64) << 32 | eax as u64;
-      counter
+        let counter: u64 = (edx as u64) << 32 | eax as u64;
+        counter
     }
-    
-        
+
     use std::fs;
     use std::hash::Hash;
     use std::sync::Arc;
@@ -654,9 +771,9 @@ mod eval {
     // ./target/release/stacking tests/wb_challenge.wasm stacking.sym --seed 100 -c 2 -v 1000 --check-args wb_challenge.wasm --check-args 00 --check-args 01 --check-args 02 --check-args 03 --check-args 04 --check-args 05 --check-args 06 --check-args 07 --check-args 08 --check-args 09 --check-args 0a --check-args 0b --check-args 0c --check-args 0d --check-args 0e --check-args 0f
     use std::collections::hash_map::DefaultHasher;
     use std::hash::Hasher;
+    use wasmtime::Val;
     use wasmtime_wasi::sync::WasiCtxBuilder;
     use wasmtime_wasi::WasiCtx;
-    use wasmtime::Val;
 
     fn get_current_working_dir() -> std::io::Result<std::path::PathBuf> {
         std::env::current_dir()
@@ -670,55 +787,55 @@ mod eval {
         // These methods are not in WASI by default, yet, let us assume they are
         // It is the same assumption of Swivel
         let linker = linker
-        .func_wrap(
-            "env",
-            "_mm_clflush",
-            |mut caller: wasmtime::Caller<'_, _>, param: u32| {
-                // get the memory of the module
-                // This comes on the guest address space, we need to translate it to the host address space
+            .func_wrap(
+                "env",
+                "_mm_clflush",
+                |mut caller: wasmtime::Caller<'_, _>, param: u32| {
+                    // get the memory of the module
+                    // This comes on the guest address space, we need to translate it to the host address space
 
-                let memory = caller.get_export("memory").unwrap().into_memory().unwrap();
-                let memory_data = memory.data(&mut caller);
-                let addr = &memory_data[param as usize] as *const u8;
+                    let memory = caller.get_export("memory").unwrap().into_memory().unwrap();
+                    let memory_data = memory.data(&mut caller);
+                    let addr = &memory_data[param as usize] as *const u8;
 
-                // println!("Flush {:?}", addr);
-                // flush the real address of the memory index
-                unsafe {
-                    asm! {
-                       "clflush [{x}]",
-                       x = in(reg) addr
+                    // println!("Flush {:?}", addr);
+                    // flush the real address of the memory index
+                    unsafe {
+                        asm! {
+                           "clflush [{x}]",
+                           x = in(reg) addr
+                        }
                     }
-                }
-            },
-        )
-        .unwrap();
+                },
+            )
+            .unwrap();
 
-    let linker = linker
-        .func_wrap(
-            "env",
-            "_mm_mfence",
-            |_caller: wasmtime::Caller<'_, _>| unsafe {
-                // println!("_mm_mfence");
-                _mm_mfence();
-            },
-        )
-        .unwrap();
+        let linker = linker
+            .func_wrap(
+                "env",
+                "_mm_mfence",
+                |_caller: wasmtime::Caller<'_, _>| unsafe {
+                    // println!("_mm_mfence");
+                    _mm_mfence();
+                },
+            )
+            .unwrap();
 
-    let linker = linker
-        .func_wrap("env", "_rdtsc", |_caller: wasmtime::Caller<'_, _>| unsafe {
-            _rdtsc()
-        })
-        .unwrap();
+        let linker = linker
+            .func_wrap("env", "_rdtsc", |_caller: wasmtime::Caller<'_, _>| unsafe {
+                _rdtsc()
+            })
+            .unwrap();
 
-    let linker = linker
-        .func_wrap(
-            "env",
-            "_mm_lfence",
-            |_caller: wasmtime::Caller<'_, _>, _param: i32| unsafe {
-                _mm_lfence();
-            },
-        )
-        .unwrap();
+        let linker = linker
+            .func_wrap(
+                "env",
+                "_mm_lfence",
+                |_caller: wasmtime::Caller<'_, _>, _param: i32| unsafe {
+                    _mm_lfence();
+                },
+            )
+            .unwrap();
 
         linker.clone()
     }
@@ -731,9 +848,16 @@ mod eval {
         wasmtime::Module,
         wasmtime::Instance,
         std::time::Duration,
+        // The generated machine code
+        Vec<u8>,
     );
 
-    pub fn execute_single(wasm: &[u8], args: Vec<String>, fuel: u64) -> Option<ExecutionResult> {
+    pub fn execute_single(
+        wasm: &[u8],
+        args: Vec<String>,
+        fuel: u64,
+        get_machine_code: bool,
+    ) -> Option<ExecutionResult> {
         let mut config = wasmtime::Config::default();
         let config = config.strategy(wasmtime::Strategy::Cranelift);
 
@@ -790,9 +914,7 @@ mod eval {
         }
 
         if let Ok(instance1) = linker.instantiate(&mut store1, &module) {
-
             if let Some(func1) = instance1.get_func(&mut store1, "_start") {
-
                 let now = std::time::Instant::now();
 
                 match func1.call(&mut store1, &mut [], &mut []) {
@@ -804,10 +926,10 @@ mod eval {
 
                         match (stdout, stderr) {
                             (Ok(stdout), Ok(stderr)) => {
-
                                 // Get mem hash
-                                let (mem_hashes, glob_vals) = assert_same_state(&module, &mut store1, instance1);
-                        
+                                let (mem_hashes, glob_vals) =
+                                    assert_same_state(&module, &mut store1, instance1);
+
                                 drop(guardout);
                                 drop(guarderr);
 
@@ -816,10 +938,16 @@ mod eval {
                                     glob_vals,
                                     stdout.into(),
                                     stderr.into(),
-                                    module,
+                                    module.clone(),
                                     instance1,
                                     elapsed,
-                                ))
+                                    if get_machine_code {
+                                        let serialized = module.serialize().unwrap();
+                                        serialized
+                                    } else {
+                                        vec![]
+                                    },
+                                ));
                             }
                             _ => {
                                 eprintln!("Error reading stderr/out");
@@ -829,44 +957,36 @@ mod eval {
                                 return None;
                             }
                         }
-                
-                
                     }
                     Err(e) => {
                         let elapsed = now.elapsed();
-
 
                         let stdout = fs::read_to_string(stdout_file);
                         let stderr = fs::read_to_string(stderr_file);
 
                         match (stdout, stderr) {
                             (Ok(stdout), Ok(stderr)) => {
-
                                 eprintln!("Runtime error {e} {} {}", stdout, stderr);
                             }
                             _ => {
                                 // do nothing
                             }
                         }
-                
+
                         drop(guardout);
                         drop(guarderr);
-                        return None
+                        return None;
                     }
                 }
-
             }
         }
 
-        return None
-        
+        return None;
     }
-    use std::process::ExitStatus;
     use std::env::args;
+    use std::process::ExitStatus;
 
-    fn get_args(
-        command: String
-    ) -> Vec<Vec<String>> {
+    fn get_args(command: String) -> Vec<Vec<String>> {
         // Write file to tmparg
         eprintln!("Getting args from {}", command);
         // Split the command by space
@@ -879,7 +999,6 @@ mod eval {
             .output()
             .expect("Could not run the command");
 
-        
         let cp = output.clone();
         let mut r = vec![];
         // Decode stdout as string
@@ -889,7 +1008,7 @@ mod eval {
         // Split first by line
         let stdout_split = stdout.split("\n");
         for l in stdout_split {
-            // add a first argument 
+            // add a first argument
             let l = format!("first {}", l);
             let stdout_split = l.split(" ");
             let stdout_split = stdout_split.map(String::from).collect::<Vec<_>>();
@@ -900,67 +1019,78 @@ mod eval {
 
         return r;
     }
-    
 
     fn assert_same_evaluation_single(
         original_wasm: &[u8],
         mutated_wasm: &[u8],
-        args: Vec<String>,fuel: u64, check_mem: bool
+        args: Vec<String>,
+        fuel: u64,
+        check_mem: bool,
     ) -> Option<ExecutionResult> {
-
-        match (execute_single(original_wasm, args.clone(), fuel), execute_single(mutated_wasm, args.clone(), fuel))
-        {
-                
-            (Some((mem1, glob1,  stdout1, stderr1, _mod1, instance1, time1)), Some((mem2, glob2,  stdout2, stderr2, _mod2, instance2, time2)))
-                => {
-
-                    if (stdout1 != stdout2) || (stderr1 != stderr2) {
-                        eprintln!("Std is not the same");
-                        eprintln!("{:?}\n======\n{:?}", stdout1, stdout2);
-                        eprintln!("Stderr is not the same");
-                        eprintln!("{:?}\n======\n{:?}", stderr1, stderr2);
+        match (
+            execute_single(original_wasm, args.clone(), fuel, false),
+            execute_single(mutated_wasm, args.clone(), fuel, false),
+        ) {
+            (
+                Some((mem1, glob1, stdout1, stderr1, _mod1, instance1, time1, _)),
+                Some((mem2, glob2, stdout2, stderr2, _mod2, instance2, time2, _)),
+            ) => {
+                if (stdout1 != stdout2) || (stderr1 != stderr2) {
+                    eprintln!("Std is not the same");
+                    eprintln!("{:?}\n======\n{:?}", stdout1, stdout2);
+                    eprintln!("Stderr is not the same");
+                    eprintln!("{:?}\n======\n{:?}", stderr1, stderr2);
+                    return None;
+                }
+                // Now we compare the stores
+                if check_mem {
+                    if mem1.len() != mem2.len() {
+                        eprintln!("Memories are not the same");
                         return None;
                     }
-                    // Now we compare the stores
-                    if check_mem {
-                        if mem1.len() != mem2.len() {
+
+                    if glob1.len() != glob2.len() {
+                        eprintln!("Globals are not the same");
+                        return None;
+                    }
+
+                    // Compare the memories
+                    // Zip them and compare the hashes in order
+                    for (m1, m2) in mem1.iter().zip(mem2.iter()) {
+                        if m1 != m2 {
                             eprintln!("Memories are not the same");
                             return None;
                         }
+                    }
 
-                        if glob1.len() != glob2.len() {
+                    // The same for globals
+                    for (g1, g2) in glob1.iter().zip(glob2.iter()) {
+                        if !assert_val_eq(&g1, &g2) {
                             eprintln!("Globals are not the same");
                             return None;
                         }
+                    }
 
-                        // Compare the memories
-                        // Zip them and compare the hashes in order
-                        for (m1, m2) in mem1.iter().zip(mem2.iter()) {
-                            if m1 != m2 {
-                                eprintln!("Memories are not the same");
-                                return None;
-                            }
-                        }
+                    eprintln!("Invalid state");
+                    return None;
+                };
+                // Compare the memories
 
-                        // The same for globals
-                        for (g1, g2) in glob1.iter().zip(glob2.iter()) {
-                            if ! assert_val_eq(&g1, &g2) {
-                                eprintln!("Globals are not the same");
-                                return None;
-                            }
-                        }
+                // Compare the globals
 
-                        eprintln!("Invalid state");
-                        return None;
-                    };
-                    // Compare the memories
+                eprintln!("Time {}ns", time2.as_nanos());
 
-                    // Compare the globals
-
-                    eprintln!("Time {}ns", time2.as_nanos());
-
-                    return Some((mem2, glob2,  stdout2, stderr2, _mod2, instance2, time2));
-                }
+                return Some((
+                    mem2,
+                    glob2,
+                    stdout2,
+                    stderr2,
+                    _mod2,
+                    instance2,
+                    time2,
+                    vec![],
+                ));
+            }
             _ => return None,
         }
     }
@@ -972,40 +1102,51 @@ mod eval {
     pub fn assert_same_evaluation(
         original_wasm: &[u8],
         mutated_wasm: &[u8],
-        args: Vec<String>,fuel: u64, check_mem: bool,
+        args: Vec<String>,
+        fuel: u64,
+        check_mem: bool,
         args_generator: Option<String>,
     ) -> Option<ExecutionResult> {
         // Execute the first arguments first
-        let mut r1 = assert_same_evaluation_single(original_wasm, mutated_wasm, args.clone(), fuel, check_mem);
+        let mut r1 = assert_same_evaluation_single(
+            original_wasm,
+            mutated_wasm,
+            args.clone(),
+            fuel,
+            check_mem,
+        );
 
         if let Some(command) = args_generator {
             let argsall = get_args(command);
-            
+
             // Iterate over the arguments
             for ar in argsall {
                 let mut args = ar.clone();
-                
-                if let Some(r) = assert_same_evaluation_single(original_wasm, mutated_wasm, args, fuel, check_mem) {
+
+                if let Some(r) = assert_same_evaluation_single(
+                    original_wasm,
+                    mutated_wasm,
+                    args,
+                    fuel,
+                    check_mem,
+                ) {
                     continue;
                 } else {
                     // Shortcut
                     eprintln!("One input fails. {}", ar.join(" "));
-                    return None
+                    return None;
                 }
             }
         }
-        
-        return r1
+
+        return r1;
     }
 
     fn assert_same_state(
         orig_module: &wasmtime::Module,
         orig_store: &mut wasmtime::Store<WasiCtx>,
-        orig_instance: wasmtime::Instance
-    ) -> (
-        Vec<u64>,
-        Vec<Val>,
-    ) {
+        orig_instance: wasmtime::Instance,
+    ) -> (Vec<u64>, Vec<Val>) {
         let mut mem_hashes = vec![];
         let mut glob_vals = vec![];
         for export in orig_module.exports() {
@@ -1029,7 +1170,7 @@ mod eval {
                     let mut h = DefaultHasher::default();
                     orig.data(&orig_store).hash(&mut h);
                     let orig = h.finish();
-                    
+
                     mem_hashes.push(orig);
                 }
                 _ => continue,
