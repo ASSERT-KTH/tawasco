@@ -402,7 +402,13 @@ VOID printInst(ADDRINT ip, string *disass, INT32 size)
     if (InfoType >= I) bigcounter++;
     InfoType=I;
     PIN_SafeCopy(v, (void *)ip, size);
-    TraceFile << "[I]" << setw(10) << dec << bigcounter << hex << setw(16) << getrelative(ip) << "    " << setw(40) << left << *disass << right;
+    TraceFile << "[I]" << setw(10) << dec << bigcounter;
+    
+    if(KnobLogMemIp.Value()){
+      TraceFile << hex << setw(16) << getrelative(ip);
+    }
+
+    TraceFile << "    " << setw(40) << left << *disass << right;
     TraceFile << setfill('0');
     for (INT32 i = 0; i < size; i++)
     {
