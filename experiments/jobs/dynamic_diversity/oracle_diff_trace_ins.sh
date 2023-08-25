@@ -22,7 +22,7 @@ hash1=$(sha256sum trace.ins.txt | cut -d ' ' -f 1)
 hash2=$(sha256sum "$trace_file" | cut -d ' ' -f 1)
 
 diffy=$(sim trace.ins.txt "$trace_file")
-echo "Sim" $diffy
+echo "Sim ins" $diffy
 th=10.0
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
