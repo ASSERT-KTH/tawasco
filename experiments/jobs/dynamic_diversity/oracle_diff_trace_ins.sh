@@ -6,15 +6,8 @@ wasm=$2
 
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
-md5sum trace.ins.txt > trace.ins.txt.md5
-md5sum $trace_file > $trace_file.md5
-# remove the file name from the md5sum
-sed -i 's/  trace.ins.txt//g' trace.ins.txt.md5
-sed -i 's/  $trace_file//g' $trace_file.md5
-cat trace.ins.txt.md5
-cat $trace_file.md5
 # check if the md5sum is the same
-if cmp -s "trace.ins.txt.md5" "$trace_file.md5"; then
+if cmp -s "trace.ins.txt" "$trace_file"; then
     echo "Same trace"
     exit 1
 else
