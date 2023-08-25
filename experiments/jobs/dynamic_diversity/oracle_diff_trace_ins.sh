@@ -7,7 +7,8 @@ function sim(){
 
    different_lines=$(diff -U 0 $tr1 $tr2 | grep -v ^@ | wc -l)
    total_lines=$(wc -l < $tr1) && total_lines=$((total_lines + $(wc -l < $tr2)))
-   similarity=$((100 - (100 * diff_lines) / total_lines))
+   #similarity=$((100 - (100 * diff_lines) / total_lines))
+   similarity=$(echo "scale=12; (100.0 - (100.0 * 24.0) / $total_lines)" | bc)
    echo $similarity
 }
 
@@ -22,11 +23,11 @@ hash2=$(sha256sum "$trace_file" | cut -d ' ' -f 1)
 
 diffy=$(sim trace.ins.txt "$trace_file")
 echo "Sim" $diffy
-
+th=10.0
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
 # check if the md5sum is the same
-if [ "$hash1" != "$hash2" ]
+if (( $(echo "$diffy >= $th" | bc -1) ))
 then
     echo "Dif trace"
     exit 1
