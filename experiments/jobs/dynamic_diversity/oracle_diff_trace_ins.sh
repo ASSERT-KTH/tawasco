@@ -11,6 +11,8 @@ md5sum $trace_file > $trace_file.md5
 # remove the file name from the md5sum
 sed -i 's/  trace.ins.txt//g' trace.ins.txt.md5
 sed -i 's/  $trace_file//g' $trace_file.md5
+cat trace.ins.txt.md5
+cat $trace_file.md5
 # check if the md5sum is the same
 if cmp -s "trace.ins.txt.md5" "$trace_file.md5"; then
     echo "Same trace"
