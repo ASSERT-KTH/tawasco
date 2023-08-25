@@ -185,15 +185,16 @@ spec:
           for seed in $(seq 1 2)
           do
             echo $seed "Inst"
-            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.ins.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 4  --check-io --oracle "/bin/bash /oracle_diff_trace_ins.sh orig.ins.txt" --remove-cache --save-compiling --report-only-if-diff-mc
+            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.ins.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 5  --check-io --oracle "/bin/bash /oracle_diff_trace_ins.sh orig.ins.txt" --remove-cache --save-compiling --report-only-if-diff-mc
+            # Save the last trace
+            cp trace.ins.txt out_trace/stacking.$seed.ins.txt
 
             echo $seed "Mem"
-            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.mem.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 4  --check-io --oracle "/bin/bash /oracle_diff_trace_mem.sh orig.mem.txt" --remove-cache --save-compiling --report-only-if-diff-mc
-
+            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.mem.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 5  --check-io --oracle "/bin/bash /oracle_diff_trace_mem.sh orig.mem.txt" --remove-cache --save-compiling --report-only-if-diff-mc
+            # Save the last trace
+            cp trace.mem.txt out_trace/stacking.$seed.mem.txt
           done
 
-          cat out_trace/log.1.ins.txt | grep "Elapsed time until oracle:" > out_trace/elapsed_time.ins.txt
-          cat out_trace/log.1.mem.txt | grep "Elapsed time until oracle:" > out_trace/elapsed_time.mem.txt
 
           cp out/stacking.*.wasm.chaos.json out_trace/
 
