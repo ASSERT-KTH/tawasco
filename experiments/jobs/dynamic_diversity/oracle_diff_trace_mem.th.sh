@@ -1,5 +1,5 @@
 trace_file=$1
-th=$2
+th=$(echo $2 | bc)
 wasm=$3
 
 function sim(){
