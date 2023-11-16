@@ -106,7 +106,7 @@ d0eb4456c48a11ca7fc19f98b9c8e4a2bb5a0fa56f7338470e9b00ac7238ac3e,hello.wasm,wasm
 d2462db378bef5efac5edfa95e2061cafeb9e64deeb5e46b747b94e02a35086d,sandbox_file_ok.wasm,wasmerio/wasmer-js,290,github,1928648,25572,''
 d48009e59e73644d72febf70e98ff6b3cceb52ffad3beb9fbea6887109fb89f9,webchip-music.wasm,wasm3/wasm3,2517,github,14139,4155,''
 d53ac7794e2ee61a168c58eb00c6b12b0248f431f254f650d7144d5d5b0670d8,gettimeofday.wasm,wasmerio/wasmer-js,290,github,16070,6533,'Got time of day!'
-d5931fbc82ab543d6262a36821e725616f17c48debd5fb353a10dd1755064e80,zlib.wasm,WebAssembly/wasm-jit-prototype,303,github,65593,24669,'sizes: 100000,25906 '
+d5931fbc82ab543d6262a36821e725616f17c48debd5fb353a10dd1755064e80,zlib.wasm,WebAssembly/wasm-jit-prototype,303,github,65593,24669,'sizes: 100000 25906 '
 d621327c75e6149606c8980c2fdfd2247e1f356ae281e73eb998bba64b8dd33f,fs_sandbox_test.wasm,wasmerio/wasmer,6552,github,63174,24773,'Reading the parent d'
 d716aaf908bf7d5f682c7e2e14d3634e940e1507780fac20d893d987d374db68,fd_write.wasm,danbev/learning-wasi,3,github,131,13,'hello world'
 d7be98e97017070f92f4a8f546fd15e5e9707bc95d64cb936cd691a4f7ff27ef,clear.wasm,richard/clear,,wapm,66818,24532,'c'
