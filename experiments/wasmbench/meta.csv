@@ -10,7 +10,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 1a3c87cad2badd8d121ff6ef9d4771fcd3f2e293c5754ab69c533039efd3fc9c,mapdir.wasm,wasmerio/wasmer,6552,github,73403,29119,'./*.wasm.out.txt'
 1c903ab3e474a1c9116cb3ecaabed67e1cb23c854ea6c2950ac4c53d339853b6,envvar.wasm,wasmerio/wasmer,6552,github,66017,25761,'Env vars: CAT=2 DOG='
 1d0f5091b5af7f8b68fb0cf885fddc91110aa17bca6a565a69b75e8f0f176eba,hash.wasm,shonenada/hash,,wapm,11979,3580,'wapm hash Help Usage'
-1f83526e10f7e7f88a6eba7682bfd3ab78139cb97e091ac3ab91ef2b8d4f5953,zlib.wasm,WAVM/WAVM,1571,github,169119,24763,'sizes: 100000,25906 '
+1f83526e10f7e7f88a6eba7682bfd3ab78139cb97e091ac3ab91ef2b8d4f5953,zlib.wasm,WAVM/WAVM,1571,github,169119,24763,'sizes: 10000025906 '
 245827425c0979c6fa43b191ab9a4a582bb36efbda582bcd6cbe0a167b393c1a,clang-wasi.wasm,sola-st/wasm-binary-security,27,github,32221,12665,'in main() in interme'
 24c0cc1bd52b641cf9e8ae74d1be188cba38d74cdb7ac18378de47382aab9541,coremark-wasi-nofp.wasm,wasm3/wasm3,2517,github,42059,16664,'2K performance run p'
 2854e8f4d8f62028d0799f2740ec960c390515443923f85d0846dc7902a02d25,echo.wasm,robert/echo,,wapm,30502,12458,''
