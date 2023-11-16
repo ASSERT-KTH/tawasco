@@ -50,7 +50,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 7081270ad7c91ee6f0d18df593ae06391aef9182f38c60273bdfefe551a0fb94,shuffle-chill.wasm,wasm3/wasm3,2517,github,16835,4882,'̃z;'
 713b5307b232c7846815a22ff899695bc4121321bce4104925f16026b0d5ba8a,args.wasm,WebAssembly/wasm-jit-prototype,303,github,15274,7117,'argc=0 argv[0]: <nul'
 7268a17054b92cb7134d660eb315d5440e7306bec3ce556640f4bf855889fec0,rust-wasi.wasm,sola-st/wasm-binary-security,27,github,1931111,27406,'in main() in interme'
-72e93ea86efa823c8b1b15742f3016b0acc32f87a59527dfee45dac9c1695352,wasm3-fib.wasm,wasm3/wasm3,2517,github,103528,46797,'wasm3 on WASM, build'
+72e93ea86efa823c8b1b15742f3016b0acc32f87a59527dfee45dac9c1695352,wasm3-fib.wasm,wasm3/wasm3,2517,github,103528,46797,'wasm3 on WASM build'
 732b007e7bcda8d00a374c2256c2a90697b280c6f22892ac2a6160d034fb3a34,clocktimeget.wasm,wasmerio/docs.wasmer.io,13,github,522,139,''
 76aee4a337b329bdb651362c6d62b8ae1d3cfae3aabb398fd8f2171c73d7105e,path_open.wasm,wasmerio/wasmer-js,290,github,113,11,'warning: using `--in'
 7acbbbe694be26363467a3b22ca2a23fd471d066821fad4cc4e32eddbe5761aa,sandbox_file_ok.wasm,wasmerio/wasmer-js,290,github,1600635,26083,''
