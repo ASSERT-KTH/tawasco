@@ -21,7 +21,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 3372b90a99908e9efd72bf4d7bf77f7063d4b80bb6835c969825fe906fd21347,exit.wasm,WAVM/WAVM,1571,github,9718,4392,''
 35cf46966c5af2432ed4a048d0c2ab601d4d45992c9120de8e902a653890ff98,mandel_dd.wasm,wasm3/wasm3,2517,github,61987,18250,'P6 1024 1024 255 0.'
 3786d0a2e96c559c6349f2e4575dda2bff51a22d957ba077a8fa2908da549163,stream.wasm,wasm3/wasm3,2517,github,33393,13994,'--------------------'
-3a0da84339c30f53f9a5de24f4d80a15c4404b77a7940b3a858acbc318576357,hello.wasm,wangzhengbo/fe-demo,1,github,22515,9357,'Hello, world!'
+3a0da84339c30f53f9a5de24f4d80a15c4404b77a7940b3a858acbc318576357,hello.wasm,wangzhengbo/fe-demo,1,github,22515,9357,'Hello world!'
 3c8cc4ae406b695bdad9b6b9e26e775f6c76976b9cc5b48d37cd88c355f0f1e4,close_preopen_fd.wasm,wasmerio/wasmer,6552,github,62848,24670,'accessing preopen fd'
 413adc1fdba7122a8def39557d22a5a0b8facc8b6eea01194563becf73bc01d0,args.wasm,WebAssembly/wasm-jit-prototype,303,github,31880,12478,'argc=1 argv[0]: 413a'
 466ae4361d72acacc2d9958d31451992590f8f54669176daae5f1c9b537751c5,wasi-test.wasm,wangzhengbo/fe-demo,1,github,32518,12705,'Hello world Construc'
