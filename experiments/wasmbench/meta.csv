@@ -7,7 +7,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 14d11ea128d06ab2aefd9f7de675b06976be401483bf84005038237d52abd56d,hello.wasm,wasmerio/wasmer,6552,github,61524,24037,'Hello, world!'
 163d1ede6d2b8655a724d98f8d1012b6bf0a495c24895ccf0d9c5feac39bddba,matrix.wasm,wasmerio/wasmer-js,290,github,8830,3562,'[32mwasm-matrix[0m'
 171b6e948a5d7a1af1da64bb82d1615b89f31aaae615af8294be709f68fc248d,exit.wasm,WebAssembly/wasm-jit-prototype,303,github,13459,5651,''
-1a3c87cad2badd8d121ff6ef9d4771fcd3f2e293c5754ab69c533039efd3fc9c,mapdir.wasm,wasmerio/wasmer,6552,github,73403,29119,'\"./*.wasm.out.txt\"'
+1a3c87cad2badd8d121ff6ef9d4771fcd3f2e293c5754ab69c533039efd3fc9c,mapdir.wasm,wasmerio/wasmer,6552,github,73403,29119,'./*.wasm.out.txt'
 1c903ab3e474a1c9116cb3ecaabed67e1cb23c854ea6c2950ac4c53d339853b6,envvar.wasm,wasmerio/wasmer,6552,github,66017,25761,'Env vars: CAT=2 DOG='
 1d0f5091b5af7f8b68fb0cf885fddc91110aa17bca6a565a69b75e8f0f176eba,hash.wasm,shonenada/hash,,wapm,11979,3580,'wapm hash Help Usage'
 1f83526e10f7e7f88a6eba7682bfd3ab78139cb97e091ac3ab91ef2b8d4f5953,zlib.wasm,WAVM/WAVM,1571,github,169119,24763,'sizes: 100000,25906 '
