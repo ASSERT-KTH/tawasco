@@ -236,7 +236,7 @@ impl Stacking {
                 None => {
                     eprintln!("Could not execute the original");
                     process::exit(1);
-                }
+                } 
             }
         } else {
             None
@@ -901,7 +901,10 @@ mod eval {
         let now = std::time::Instant::now();
         let module = match wasmtime::Module::new(&engine, &wasm) {
             Ok(o) => o,
-            Err(_) => return None,
+            Err(e) => {
+                eprintln!("Error compiling the module {}", e);
+                return None;
+            }
         };
         let lapsed = now.elapsed();
         if is_original {
@@ -918,11 +921,20 @@ mod eval {
             // Preopen in the CWD
             .preopened_dir(
                 wasmtime_wasi::sync::Dir::open_ambient_dir(
+                    "./",
+                    wasmtime_wasi::sync::ambient_authority(),
+                )
+                .unwrap(),
+                "./",
+            )
+            .unwrap()
+            .preopened_dir(
+                wasmtime_wasi::sync::Dir::open_ambient_dir(
                     folder_of_bin.clone(),
                     wasmtime_wasi::sync::ambient_authority(),
                 )
                 .unwrap(),
-                ".",
+                "./"
             )
             .unwrap()
             .build();
@@ -944,96 +956,117 @@ mod eval {
             store1.out_of_fuel_trap();
         }
 
-        if let Ok(instance1) = linker.instantiate(&mut store1, &module) {
-            if let Some(func1) = instance1.get_func(&mut store1, "_start") {
-                let now = std::time::Instant::now();
-
-                match func1.call(&mut store1, &mut [], &mut []) {
-                    Ok(e) => {
-                        let elapsed = now.elapsed();
-                        if is_original {
-                            eprintln!("Execution took {}ns", lapsed.as_nanos());
-                        } else {
-                            eprintln!("Variant execution took {}ns", lapsed.as_nanos());
-                        }
-                        let stdout = fs::read_to_string(stdout_file);
-                        let stderr = fs::read_to_string(stderr_file);
-
-                        // Close files
-                        std::fs::remove_file(stdout_file);
-                        std::fs::remove_file(stderr_file);
-
-                        match (stdout, stderr) {
-                            (Ok(stdout), Ok(stderr)) => {
-                                // Get mem hash
-                                let (mem_hashes, glob_vals) =
-                                    assert_same_state(&module, &mut store1, instance1);
-
-                                drop(guardout);
-                                drop(guarderr);
-
-                                return Some((
-                                    mem_hashes,
-                                    glob_vals,
-                                    stdout.into(),
-                                    stderr.into(),
-                                    module.clone(),
-                                    instance1,
-                                    elapsed,
-                                    if get_machine_code {
-                                        let serialized = module.serialize().unwrap();
-                                        serialized
-                                    } else {
-                                        vec![]
-                                    },
-                                ));
+        eprintln!("Instantiating the module");
+        match linker.instantiate(&mut store1, &module){
+            Ok(instance1) => {
+                match instance1.get_func(&mut store1, "_start") {
+                    Some(func1) => {
+                        let now = std::time::Instant::now();
+    
+                        match func1.call(&mut store1, &mut [], &mut []) {
+                            Ok(e) => {
+                                let elapsed = now.elapsed();
+                                if is_original {
+                                    eprintln!("Execution took {}ns", lapsed.as_nanos());
+                                } else {
+                                    eprintln!("Variant execution took {}ns", lapsed.as_nanos());
+                                }
+                                let stdout = fs::read_to_string(stdout_file);
+                                let stderr = fs::read_to_string(stderr_file);
+        
+        
+                                match (stdout, stderr) {
+                                    (Ok(stdout), Ok(stderr)) => {
+                                        // Get mem hash
+                                        let (mem_hashes, glob_vals) =
+                                            assert_same_state(&module, &mut store1, instance1);
+        
+                                        drop(guardout);
+                                        drop(guarderr);
+        
+                                        return Some((
+                                            mem_hashes,
+                                            glob_vals,
+                                            stdout.into(),
+                                            stderr.into(),
+                                            module.clone(),
+                                            instance1,
+                                            elapsed,
+                                            if get_machine_code {
+                                                let serialized = module.serialize().unwrap();
+                                                serialized
+                                            } else {
+                                                vec![]
+                                            },
+                                        ));
+                                    }
+                                    _ => {
+                                        eprintln!("Error reading stderr/out");
+                                        drop(guardout);
+                                        drop(guarderr);
+        
+                                        return None;
+                                    }
+                                }
                             }
-                            _ => {
-                                eprintln!("Error reading stderr/out");
+                            Err(e) => {
+                                eprintln!("Error executing the function {}", e);
+                                let elapsed = now.elapsed();
+        
+                                let stdout = fs::read_to_string(stdout_file);
+                                let stderr = fs::read_to_string(stderr_file);
+        
+                                match (stdout, stderr) {
+                                    (Ok(stdout), Ok(stderr)) => {
+                                        eprintln!("Runtime error {e} {} {}", stdout, stderr);
+
+                                        let (mem_hashes, glob_vals) =
+                                            assert_same_state(&module, &mut store1, instance1);
+                                            
+                                        return Some((
+                                            mem_hashes,
+                                            glob_vals,
+                                            stdout.into(),
+                                            stderr.into(),
+                                            module.clone(),
+                                            instance1,
+                                            elapsed,
+                                            if get_machine_code {
+                                                let serialized = module.serialize().unwrap();
+                                                serialized
+                                            } else {
+                                                vec![]
+                                            },
+                                        ));
+                                    }
+                                    _ => {
+                                        // do nothing
+                                    }
+                                }
+        
                                 drop(guardout);
                                 drop(guarderr);
-
                                 return None;
                             }
                         }
                     }
-                    Err(e) => {
-                        let elapsed = now.elapsed();
-
-                        let stdout = fs::read_to_string(stdout_file);
-                        let stderr = fs::read_to_string(stderr_file);
-
+                    None => {
+                        eprintln!("Function _start not found");
+        
                         // Close files
-                        std::fs::remove_file(stdout_file);
-                        std::fs::remove_file(stderr_file);
-                        match (stdout, stderr) {
-                            (Ok(stdout), Ok(stderr)) => {
-                                eprintln!("Runtime error {e} {} {}", stdout, stderr);
-                            }
-                            _ => {
-                                // do nothing
-                            }
-                        }
-
-                        drop(guardout);
-                        drop(guarderr);
                         return None;
                     }
                 }
-            }
-            else {
+            },
+            Err(e) => {
+                eprintln!("Error instantiating the module {}", e);
 
                 // Close files
-                std::fs::remove_file(stdout_file);
-                std::fs::remove_file(stderr_file);
+                return None;
             }
-        } else {
-
-            // Close files
-            std::fs::remove_file(stdout_file);
-            std::fs::remove_file(stderr_file);
         }
 
+        unreachable!();
         return None;
     }
     use std::env::args;
