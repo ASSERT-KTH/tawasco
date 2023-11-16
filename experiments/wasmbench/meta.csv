@@ -69,7 +69,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 8f8f5d18ca5542874cbb3df40ce19cd866eb1b4cb67ae41de7be403deca1c8fc,stdout.wasm,WAVM/WAVM,1571,github,11817,5170,'Hello world!'
 8fe7835ee02c28c9ce5018bd6b286102c4d2c6722560513c25cc60a003f36d7d,env.wasm,wasmerio/wasmer-js,290,github,1947091,31152,'should be set (WASM_'
 90e534a329e11574eeb9baeb6768f0741ced5bdd0544609ea318b09c8593d2b8,greeting.wasm,fluencelabs/fce,8,github,70944,23279,''
-91530fe4555cc5924d529301beb1bbceb3e48905ff707bd1363872c48424327d,fd_append.wasm,wasmerio/wasmer,6552,github,71422,28152,'Hello, world!Goo'
+91530fe4555cc5924d529301beb1bbceb3e48905ff707bd1363872c48424327d,fd_append.wasm,wasmerio/wasmer,6552,github,71422,28152,'Hello world!Goo'
 9354637252826fbe2c12601b671e5809effd091e05f8f56692e5a6a0eee14c67,index.wasm,torch2424/as-playground,0,github,4621,1935,'Logging myClass.toSt'
 9556a23c093f3480040bceb6b8f14ea2e0216996df727d922e63e2adbefccf96,ds.wasm,isurfer21/date-shortener,,wapm,1701896,53410,''
 966c1b96fe828191908532c27134ff01caa5c953d697efa859c76f3328e519f2,function.wasm,faasm/faasm,336,github,29349,12298,'memmove as expected'
