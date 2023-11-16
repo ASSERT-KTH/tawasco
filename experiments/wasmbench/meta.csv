@@ -4,7 +4,7 @@ sha,filename,source,stars,method,size_bytes,instruction_count,out[:20]
 0e0a8bebb265f50292063a06d085fe03dea6d51f09a1a8d1f5f98112a5bf34f0,empty.wasm,wasmerio/wasmer-js,290,github,1590207,23166,''
 10bea507207ce5c9b892cf620ce342387ee3fa7d6cd2ccca8b954a944f565f1d,1132-aggie_io_10bea507207ce5c9.wasm,aggie.io,,web/own-crawler,2007,896,''
 145bf5e9ca6d00ebc1d67b3ce20c95713731a8a3f0b14509aba8da591938a2df,random.wasm,WAVM/WAVM,1571,github,30329,12277,'4b7a6eaee6eb6d1706da'
-14d11ea128d06ab2aefd9f7de675b06976be401483bf84005038237d52abd56d,hello.wasm,wasmerio/wasmer,6552,github,61524,24037,'Hello, world!'
+14d11ea128d06ab2aefd9f7de675b06976be401483bf84005038237d52abd56d,hello.wasm,wasmerio/wasmer,6552,github,61524,24037,'Hello world!'
 163d1ede6d2b8655a724d98f8d1012b6bf0a495c24895ccf0d9c5feac39bddba,matrix.wasm,wasmerio/wasmer-js,290,github,8830,3562,'[32mwasm-matrix[0m'
 171b6e948a5d7a1af1da64bb82d1615b89f31aaae615af8294be709f68fc248d,exit.wasm,WebAssembly/wasm-jit-prototype,303,github,13459,5651,''
 1a3c87cad2badd8d121ff6ef9d4771fcd3f2e293c5754ab69c533039efd3fc9c,mapdir.wasm,wasmerio/wasmer,6552,github,73403,29119,'./*.wasm.out.txt'
