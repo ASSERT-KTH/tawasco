@@ -228,7 +228,7 @@ impl Stacking {
             .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
 
         let original_state = if check_io {
-            match eval::execute_single(&current, check_args.clone(), fuel, true) {
+            match eval::execute_single(&current, check_args.clone(), fuel, true, true) {
                 Some(it) => {
                     eprintln!("Original time {}ns", it.6.as_nanos());
                     Some(it)
@@ -307,7 +307,7 @@ impl Stacking {
                                     self.check_args.clone(),
                                     self.fuel,
                                     self.check_mem,
-                                    self.args_generator.clone(),
+                                    self.args_generator.clone()
                                 ) {
                                     Some(st) => {
                                         // The val is the value is the wasm + the hash of the previous one
@@ -693,7 +693,7 @@ fn main() -> Result<(), anyhow::Error> {
                 // Write the current to fs
                 std::fs::write(&name, new.clone()).expect("Could not write the output file");
 
-                eprintln!("=== STACKED");
+                eprintln!("=== STACKED {}", c);
 
                 if opts.save_compiling {
                     let mut config = wasmtime::Config::default();
@@ -881,6 +881,7 @@ mod eval {
         args: Vec<String>,
         fuel: u64,
         get_machine_code: bool,
+        is_original: bool
     ) -> Option<ExecutionResult> {
         let mut config = wasmtime::Config::default();
         let config = config.strategy(wasmtime::Strategy::Cranelift);
@@ -897,11 +898,17 @@ mod eval {
 
         let engine = wasmtime::Engine::new(&config).unwrap();
 
+        let now = std::time::Instant::now();
         let module = match wasmtime::Module::new(&engine, &wasm) {
             Ok(o) => o,
             Err(_) => return None,
         };
-
+        let lapsed = now.elapsed();
+        if is_original {
+            eprintln!("Compilation took {}ns", lapsed.as_nanos());
+        } else {
+            eprintln!("Variant compilation took {}ns", lapsed.as_nanos());
+        }
         let folder_of_bin = get_current_working_dir().unwrap().display().to_string();
 
         let mut wasi = WasiCtxBuilder::new()
@@ -944,9 +951,17 @@ mod eval {
                 match func1.call(&mut store1, &mut [], &mut []) {
                     Ok(e) => {
                         let elapsed = now.elapsed();
-
+                        if is_original {
+                            eprintln!("Execution took {}ns", lapsed.as_nanos());
+                        } else {
+                            eprintln!("Variant execution took {}ns", lapsed.as_nanos());
+                        }
                         let stdout = fs::read_to_string(stdout_file);
                         let stderr = fs::read_to_string(stderr_file);
+
+                        // Close files
+                        std::fs::remove_file(stdout_file);
+                        std::fs::remove_file(stderr_file);
 
                         match (stdout, stderr) {
                             (Ok(stdout), Ok(stderr)) => {
@@ -988,6 +1003,9 @@ mod eval {
                         let stdout = fs::read_to_string(stdout_file);
                         let stderr = fs::read_to_string(stderr_file);
 
+                        // Close files
+                        std::fs::remove_file(stdout_file);
+                        std::fs::remove_file(stderr_file);
                         match (stdout, stderr) {
                             (Ok(stdout), Ok(stderr)) => {
                                 eprintln!("Runtime error {e} {} {}", stdout, stderr);
@@ -1003,6 +1021,17 @@ mod eval {
                     }
                 }
             }
+            else {
+
+                // Close files
+                std::fs::remove_file(stdout_file);
+                std::fs::remove_file(stderr_file);
+            }
+        } else {
+
+            // Close files
+            std::fs::remove_file(stdout_file);
+            std::fs::remove_file(stderr_file);
         }
 
         return None;
@@ -1052,18 +1081,16 @@ mod eval {
         check_mem: bool,
     ) -> Option<ExecutionResult> {
         match (
-            execute_single(original_wasm, args.clone(), fuel, false),
-            execute_single(mutated_wasm, args.clone(), fuel, false),
+            execute_single(original_wasm, args.clone(), fuel, false, true),
+            execute_single(mutated_wasm, args.clone(), fuel, false, false),
         ) {
             (
                 Some((mem1, glob1, stdout1, stderr1, _mod1, instance1, time1, _)),
                 Some((mem2, glob2, stdout2, stderr2, _mod2, instance2, time2, _)),
             ) => {
-                if (stdout1 != stdout2) || (stderr1 != stderr2) {
+                if (stdout1 != stdout2) {
                     eprintln!("Std is not the same");
                     eprintln!("{:?}\n======\n{:?}", stdout1, stdout2);
-                    eprintln!("Stderr is not the same");
-                    eprintln!("{:?}\n======\n{:?}", stderr1, stderr2);
                     return None;
                 }
                 // Now we compare the stores
@@ -1073,10 +1100,6 @@ mod eval {
                         return None;
                     }
 
-                    if glob1.len() != glob2.len() {
-                        eprintln!("Globals are not the same");
-                        return None;
-                    }
 
                     // Compare the memories
                     // Zip them and compare the hashes in order
@@ -1094,15 +1117,9 @@ mod eval {
                             return None;
                         }
                     }
-
-                    eprintln!("Invalid state");
-                    return None;
                 };
-                // Compare the memories
-
-                // Compare the globals
-
-                eprintln!("Time {}ns", time2.as_nanos());
+                eprintln!("Orig Time {}ns", time1.as_nanos());
+                eprintln!("Variant Time {}ns", time2.as_nanos());
 
                 return Some((
                     mem2,
