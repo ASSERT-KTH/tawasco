@@ -131,6 +131,7 @@ fn single_pass(input_wasm: &PathBuf, output: bool) {
     let execution_elapsed = now.elapsed().as_nanos();
 
     if output {
+        eprint!("{}," , pathcp.display());
         eprint!("{},", wsize);
         eprint!("{},", size);
         eprint!("{},", comlapsed);
