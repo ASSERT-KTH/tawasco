@@ -125,10 +125,18 @@ fn single_pass(input_wasm: &PathBuf, output: bool) {
             .typed::<(), ()>(&mut store)
             .unwrap();
 
-    func.call(&mut store, ())
-        .unwrap();
-
+    
+    let r = func.call(&mut store, ());
     let execution_elapsed = now.elapsed().as_nanos();
+
+    match r {
+        Ok(_) => {
+            println!("Execution succeeded");
+        }
+        Err(e) => {
+            println!("Execution return exit code: {:?}", e);
+        }
+    }
 
     if output {
         eprint!("{}," , pathcp.display());
