@@ -134,7 +134,7 @@ fn single_pass(input_wasm: &PathBuf, output: bool) {
         eprint!("{},", wsize);
         eprint!("{},", size);
         eprint!("{},", comlapsed);
-        eprint!("{}", execution_elapsed);
+        eprintln!("{}", execution_elapsed);
     }
 }
 
@@ -153,7 +153,7 @@ mod test {
     #[test]
     fn test_bench() {
         let mut opts = super::Options {
-            input: std::path::PathBuf::from("tests/i.wasm"),
+            input: std::path::PathBuf::from("tests/i2.wasm"),
             count: 100,
             discard: 0,
         };
