@@ -1,0 +1,297 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: wasm-mutate-1-
+spec:
+  entrypoint: per-file
+  parallelism: 50
+  templates:
+  - name: per-file
+    steps:
+    - - name: select-file
+        template: wasm-mutate-template
+        arguments:
+          parameters:
+            - name: file
+              value: "{{ item.file }}"
+        withItems:
+          - { file: "01fc1bcf0957d51633f99345f821111f57ea37486f7f7dfbb9b346b52ee5e46f"}
+          - { file: "0a0f242b77afe39fa5ff0cd579d7f6378b5869feae7ee792f416c9df19a5caf1"}
+          - { file: "0e0a8bebb265f50292063a06d085fe03dea6d51f09a1a8d1f5f98112a5bf34f0"}
+          - { file: "10bea507207ce5c9b892cf620ce342387ee3fa7d6cd2ccca8b954a944f565f1d"}
+          - { file: "145bf5e9ca6d00ebc1d67b3ce20c95713731a8a3f0b14509aba8da591938a2df"}
+          - { file: "14d11ea128d06ab2aefd9f7de675b06976be401483bf84005038237d52abd56d"}
+          - { file: "163d1ede6d2b8655a724d98f8d1012b6bf0a495c24895ccf0d9c5feac39bddba"}
+          - { file: "171b6e948a5d7a1af1da64bb82d1615b89f31aaae615af8294be709f68fc248d"}
+          - { file: "1a3c87cad2badd8d121ff6ef9d4771fcd3f2e293c5754ab69c533039efd3fc9c"}
+          - { file: "1c903ab3e474a1c9116cb3ecaabed67e1cb23c854ea6c2950ac4c53d339853b6"}
+          - { file: "1d0f5091b5af7f8b68fb0cf885fddc91110aa17bca6a565a69b75e8f0f176eba"}
+          - { file: "1f83526e10f7e7f88a6eba7682bfd3ab78139cb97e091ac3ab91ef2b8d4f5953"}
+          - { file: "245827425c0979c6fa43b191ab9a4a582bb36efbda582bcd6cbe0a167b393c1a"}
+          - { file: "24c0cc1bd52b641cf9e8ae74d1be188cba38d74cdb7ac18378de47382aab9541"}
+          - { file: "2854e8f4d8f62028d0799f2740ec960c390515443923f85d0846dc7902a02d25"}
+          - { file: "28d004b9b24bd2d195bca48d3d081f8b60a3666054c106e3f352092c3e51151a"}
+          - { file: "2aa1dfdea99b83df30ebd484db8b555495a909fb120ef42688ab2e1fdf7afed9"}
+          - { file: "2f838b05416efa950e1784b79e72f35b17ef24890b0a4eec1ef80dff227c95d0"}
+          - { file: "315f45bc2205011e6327bf23fbce007a4d816836c7b1239b5827dcd40c9b31eb"}
+          - { file: "3372b90a99908e9efd72bf4d7bf77f7063d4b80bb6835c969825fe906fd21347"}
+          - { file: "35cf46966c5af2432ed4a048d0c2ab601d4d45992c9120de8e902a653890ff98"}
+          - { file: "3786d0a2e96c559c6349f2e4575dda2bff51a22d957ba077a8fa2908da549163"}
+          - { file: "3a0da84339c30f53f9a5de24f4d80a15c4404b77a7940b3a858acbc318576357"}
+          - { file: "3c8cc4ae406b695bdad9b6b9e26e775f6c76976b9cc5b48d37cd88c355f0f1e4"}
+          - { file: "413adc1fdba7122a8def39557d22a5a0b8facc8b6eea01194563becf73bc01d0"}
+          - { file: "466ae4361d72acacc2d9958d31451992590f8f54669176daae5f1c9b537751c5"}
+          - { file: "4a3c8d0c7b6e425c5642bab88a9fb3cb4d0f672a63fd996d0eea0eaee0e016be"}
+          - { file: "4e910df82716a1c8100b1349323c403b77dd2eb4d014e4face68efa4a943861b"}
+          - { file: "4f0eedb990dea2b901087253a5381c77006e5955b6cbf0db60a1a5ac78068420"}
+          - { file: "50e733f3d48ec49051f5b4d9149d234eb052d3af920fd99a87f43dabc9ce98ee"}
+          - { file: "5546a5ac5ff703f6e5f5355c5a6ab4c51abac899b078c2391a127e5a49fcfd53"}
+          - { file: "566b93b25ce5769e19673309e8a8e14d5972311f65414319080c9453bda6f23e"}
+          - { file: "57d0bb16f3f414d8621ba95114d802043ca4000373d6f44c1adcbaf23addde82"}
+          - { file: "5903bc778fe6f4b0d92041e6da8b101737a4dfc43e90a2554020509b63944d50"}
+          - { file: "5cdd62fc4b44a30f7172c85af18d3ee4b9bc0ca32aa8154af45feb5770f2b8cf"}
+          - { file: "5d913289af2f0ac09bca73b620e0bcc563327a94535494b9e0ca9e474cabff4c"}
+          - { file: "608b874af8305c7ced14a0ea39e83cf320f46afccb49a7ded126a66a28139717"}
+          - { file: "608da57fb934ea33018deec1af82726a5f7eccd7f5d45ba18c37d1c622b3a576"}
+          - { file: "6424ace707f20832c595e8b509c8779a8897771f4759d34c46fcec9dac355d85"}
+          - { file: "64aa5f43aa43071b5669d174372519107017ace6176e1ab7038d582b84e7e3ca"}
+          - { file: "65554646fddfb8e1f0e815bb432b7688a5b10d792f117c256d90eed40a71ea43"}
+          - { file: "65bb7368b55ebd366ce339cf58628750b203ea327e22c362f94dfa8bf8b55493"}
+          - { file: "66621e7d51a5ae3386630fdaf2eb5660e2c13a3c1eb08e32001bbcd48047b9d8"}
+          - { file: "675293e7b14efcb94b1755a84c224a8f29ada4032e9705a70df236b4a19987d8"}
+          - { file: "6782a33efcb2d83b061a7de869128e5221c56b7561bf9465607ee378fa082a5c"}
+          - { file: "68055f492d87a74d17d143528dfb901cfc4460cbc0f28e4e1ec94a9fd86add7f"}
+          - { file: "68ebf352f8b8170d949f5ee3e55ab97b3a977b0ffdcff75f90e7bed7130c44e3"}
+          - { file: "6d774b82ac22740bf400f7c4dddbd79f8dd5ea029a207d92a7025c927894b37e"}
+          - { file: "7081270ad7c91ee6f0d18df593ae06391aef9182f38c60273bdfefe551a0fb94"}
+          - { file: "713b5307b232c7846815a22ff899695bc4121321bce4104925f16026b0d5ba8a"}
+          - { file: "7268a17054b92cb7134d660eb315d5440e7306bec3ce556640f4bf855889fec0"}
+          - { file: "72e93ea86efa823c8b1b15742f3016b0acc32f87a59527dfee45dac9c1695352"}
+          - { file: "732b007e7bcda8d00a374c2256c2a90697b280c6f22892ac2a6160d034fb3a34"}
+          - { file: "76aee4a337b329bdb651362c6d62b8ae1d3cfae3aabb398fd8f2171c73d7105e"}
+          - { file: "7acbbbe694be26363467a3b22ca2a23fd471d066821fad4cc4e32eddbe5761aa"}
+          - { file: "80ae74cce13742f7b0c7c11ca46e90f01a0c0e70bf58ca5cfc1ef42d30c2ebc0"}
+          - { file: "813f5193f81e8d77d0791b40ba5cbe314b6eed064d3a8b68c7906565b0943b2d"}
+          - { file: "82686a03f7c8af4b80d7be5700897a4d4b403aab54428ccd087b1afc44c51013"}
+          - { file: "83b8c37be7f13aa1cf9370b70be4f9e465f2c73515fccdeb4e99b45c45dac1de"}
+          - { file: "84217ca10afac622d53885b59101d512721a4ac74cae92f43106ffdcc876213d"}
+          - { file: "844e18f99442d1a38e60a425d45e25f68851f9d79b42e3cc4e5b5a9e7f53888c"}
+          - { file: "84a55165a056ebf6d8bc6169d35f8f0e1123c370ec750d8d106917742dfb809f"}
+          - { file: "8568b2c78152424a4870a0dea4ea732a91ab7902b5080764468a3e04702fbedc"}
+          - { file: "8569973f557a62865028ad9247e008f4e5f9a26057c5a419027a39048cf6f73b"}
+          - { file: "891d4402e6dc80f288d43d006c3d9ba96d63547d2b3f1b95f11dc9c6c8982f04"}
+          - { file: "8999137f07f47940f278436e15f71b523fad45d31c1bc2fde9cdb61f6f7887b4"}
+          - { file: "8d4c34a3822065f7ca8782528aa8d63dfdc5dac0c8de8e88eb9757d2e08fd8ef"}
+          - { file: "8f8f5d18ca5542874cbb3df40ce19cd866eb1b4cb67ae41de7be403deca1c8fc"}
+          - { file: "8fe7835ee02c28c9ce5018bd6b286102c4d2c6722560513c25cc60a003f36d7d"}
+          - { file: "90e534a329e11574eeb9baeb6768f0741ced5bdd0544609ea318b09c8593d2b8"}
+          - { file: "91530fe4555cc5924d529301beb1bbceb3e48905ff707bd1363872c48424327d"}
+          - { file: "9354637252826fbe2c12601b671e5809effd091e05f8f56692e5a6a0eee14c67"}
+          - { file: "9556a23c093f3480040bceb6b8f14ea2e0216996df727d922e63e2adbefccf96"}
+          - { file: "966c1b96fe828191908532c27134ff01caa5c953d697efa859c76f3328e519f2"}
+          - { file: "97d798302daab884e93df04316359c1ab285cfe13edd328f45601d03c3dd9423"}
+          - { file: "9a9d74c11f52cda8a065f4466d6057f94469d7a2683f05d404ad53382836c4f8"}
+          - { file: "9e160553704f99d4d75d00387ec3e87f0d14e27e892f70a2f093146436215a2d"}
+          - { file: "a15f511fdd984fd1f29685950d91365f8ac5c484263e3d4d74b9eb4547b32af1"}
+          - { file: "a2572280ec2985a5e2e98351c85874bd33194b1e166975a4c3c739c00a3c9e76"}
+          - { file: "a45f4cb7de6bb2ebc647097f572bb635a47850e8ac0e1b1515680948ca8dcbaa"}
+          - { file: "a52818fa928192b6d2b75b401ebb86006a79f0968dbb5109fe08b0aefc16583e"}
+          - { file: "a71a19729614b6915144f0a19aef0b03fb1125a161d1114b457c7968e9a19c9b"}
+          - { file: "acaac91334f6f0c627bb0b76eb9ac2377502677ac634e74034b7e5deba72d753"}
+          - { file: "addd7bf98d99396b476d7adc6a4e3c122733892a9de80c91afeecbd09a16bb55"}
+          - { file: "b022a54c3b5546fd09f00e6cb6ed12d04530298cef64182db9e12b8d9b4e4737"}
+          - { file: "b48ce52c32638d6eec9871d123fbbb2a30eef682f4a4240082b571944fc616f0"}
+          - { file: "b4b6e103cdf1019a79195acbc58de365a7066ab6a928c5a189fb8631cbcce2ff"}
+          - { file: "b6514e7b0b1fe7f4a96f980eafd1b560e4f5f60e74bcea47dea785712b5e077d"}
+          - { file: "b6f29f4ec06084d812d336a1eab8e9719d7517df7525d251b8cb0d5d6040c6bc"}
+          - { file: "b76e248e821e41d31ed135ff72116a2bc75935785973accac03a136bca7095b8"}
+          - { file: "b8298c6a2615a36e4426ad4982de0a29da7a2b2da2675a49c13749e0d1aeaaf7"}
+          - { file: "ba994dd78b67b43b861acbcb64263c41180597d1cd7452134d34911b2ff6088a"}
+          - { file: "bc7b28664aac2c81d34b359169ec37da9fbc6f54e37764b807d48fc2a8619e5b"}
+          - { file: "c0818c26d2a2ac930ab84e081927ba6543cde46ddc87cd7c5bd4cb0e84ce21ae"}
+          - { file: "c11e8660e55485c6aa9df39edf8ab735cb67ed32058eae04e1f89447d8d60641"}
+          - { file: "c389788a393f13b5c48f90d8fb061f087c6f401c2fd0f3aded753d9a16fce860"}
+          - { file: "c7a84114433d952d690286b6813111aa126b3dc0930029ff6d6bf1c3220fc723"}
+          - { file: "c8026b77b08a48698d98d8f08ad608e7527833b5fe3cf1f0af2ba0292c455cc0"}
+          - { file: "cf52136712baabb3e2b0ec6c3a937108e111e95adb5e0f6f953cf8ffb3429673"}
+          - { file: "cf88c5e3cf7414d26fa86425eeda805a73e6fa8712143ed6181d70b4dbfd7028"}
+          - { file: "cf92a2212cb7d434a7eb0db020c6956abfde48ee16ae6c38be3272e60630dec3"}
+          - { file: "cfa2c75ab461c6f7cdc228ba1c98e22b18bf0e7df637d54bb8f32a6abf703915"}
+          - { file: "cfc96d2afb917453fb7e3caaa4e0de75ca2c8dd07f007525f1a34dfeb181d296"}
+          - { file: "d0eb4456c48a11ca7fc19f98b9c8e4a2bb5a0fa56f7338470e9b00ac7238ac3e"}
+          - { file: "d2462db378bef5efac5edfa95e2061cafeb9e64deeb5e46b747b94e02a35086d"}
+          - { file: "d48009e59e73644d72febf70e98ff6b3cceb52ffad3beb9fbea6887109fb89f9"}
+          - { file: "d53ac7794e2ee61a168c58eb00c6b12b0248f431f254f650d7144d5d5b0670d8"}
+          - { file: "d5931fbc82ab543d6262a36821e725616f17c48debd5fb353a10dd1755064e80"}
+          - { file: "d621327c75e6149606c8980c2fdfd2247e1f356ae281e73eb998bba64b8dd33f"}
+          - { file: "d716aaf908bf7d5f682c7e2e14d3634e940e1507780fac20d893d987d374db68"}
+          - { file: "d7be98e97017070f92f4a8f546fd15e5e9707bc95d64cb936cd691a4f7ff27ef"}
+          - { file: "d99d77caea090bcb42263ee49b55f696bd5be483d069d9e8e36e665f165a0be4"}
+          - { file: "da16d10cd7cca1c1157b5b3e71e66bf385ce6fdf3f2ec5dc008f54eb21d357db"}
+          - { file: "db99687a12c0ea84d5c20f0f69c65e8e7248fd3e87079f8b6475772e94f3f740"}
+          - { file: "dd3c5c5d822c4f320471ec7ac7020361e62d148128a3dfaedc9d2d70cc1deff8"}
+          - { file: "dd8a8ec27307651b5f5d4eb59d5d29697f3995b35d786707bc5d33f97addb5c5"}
+          - { file: "e16462c49e185c7217497e3138c7824f782255b8f0ec4a9307401c58b8b411e2"}
+          - { file: "e1c6df44e4c337cefcd6b6c467efee4fcd0d0227d47509c06f39632738fb5752"}
+          - { file: "e22c0004d732c0184a339e35a19fd8683d32a35a41dc2702723692707af33fc8"}
+          - { file: "e65be7f0ce6a0e7c1e72444acca11d2b9c3456f0b400d5707f7ca47d0a24ff3b"}
+          - { file: "e6d8e3245649e83ccd381ebdf15196861159da35840e4bf7fb0b2fad7377fcc4"}
+          - { file: "e6fafc5913921693101307569fc1159d4355998249ca8d42d540015433d25664"}
+          - { file: "e8eb28c17c24a1e43af085d3c8bf5f6a8634b7989ff6371fb1c671dde4a27f70"}
+          - { file: "ed03d8a5ceaea1285c101b853c8a91657ba303146b4a2f46174083515977aa5b"}
+          - { file: "eebee94ed2f3fc48e472b1abe031f73d74fa1a0ee0c6013e569d9e3043b9f580"}
+          - { file: "ef8bfa08680f090e669b710a1f78ff8ab55eab38ab9853fadfcfb0cb062dbc6c"}
+          - { file: "efcfc6ea0381a4ac1a629cac8d70fb2fd48c4eb88d6164d3d3096ac1a72a60eb"}
+          - { file: "f32226b7d6e2ec438ecc34ddbabaf6b42eaf0b583e8f70a33db81f2dfe31cc50"}
+          - { file: "f34ac875f57e9b7f95fee646c72475541cd3e0d590e41016c6c2e6d601302dab"}
+          - { file: "f4b7591296ead10264e0f101f355bdf848865c31329325594e66fbabefec235b"}
+          - { file: "f6b5c605187d58887fd978b9f80aecc4ad228e47c5c8961ec36808b108ed63ed"}
+          - { file: "f92c4c8bd6e08775b6cb60e15384c872e9b7e336ca7d7883f16654cc36d66be7"}
+          - { file: "fb35ebb490a61ad4d9b93b8682ea8529331e794ecbb71d8f9ac9c08cad26f1cd"}
+          - { file: "fd5bab5f6d3869fdd56734d5b33f5a6cf5e36525b6522966bc2e7248fdbc23c4"}
+
+
+          # Add the others here
+
+  - name: wasm-mutate-template
+    # activeDeadlineSeconds: 36000
+    retryStrategy:
+      limit: 2
+    inputs:
+
+      parameters:
+      - name: file
+    outputs:
+      artifacts:
+      - name: variants
+        path: variants/{{inputs.parameters.file}}.wasm
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: 137.135.188.207:9000
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "/variants/real_world/{{inputs.parameters.file}}.wasm"
+          accessKeySecret:
+            name: argo-artifacts-extr
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts-extr
+            key: secretkey
+    script:
+      image: jacarte/wm-image:latest
+      command: [bash]
+      env:
+      - name: MINIOPASS  # name of env var
+        valueFrom:
+          secretKeyRef:
+            name: argo-artifacts-extr    # name of an existing k8s secret
+            key: secretkey     # 'key' subcomponent of the secret
+      resources:
+        requests:
+          memory: "4G"
+          cpu: 1
+      source: |
+
+        cd /
+
+        # install minio mc
+        mkdir -p $HOME/minio-binaries
+        wget -O $HOME/minio-binaries/mc https://dl.min.io/client/mc/release/linux-amd64/mc
+        ls
+        echo "======"
+        chmod +x $HOME/minio-binaries/mc
+        export PATH=$PATH:$HOME/minio-binaries/
+
+
+        mc config host add exp http://137.135.188.207:9000 minio ${MINIOPASS}
+        # check the output, if exist, then exit
+        mc ls "exp/wasm-mutate/variants/real_world/{{inputs.parameters.file}}.wasm"
+        echo =============================
+        if [[  $(mc ls "exp/wasm-mutate/variants/real_world/{{inputs.parameters.file}}.wasm" | wc -l) -gt 30 ]]
+        then
+            echo "Already generated skipping"
+            # Check the number of oracles ?
+
+            exit 0
+          
+        fi
+
+        # Install 7z deps
+        apt-get update && apt-get install -y p7zip-full curl git
+        
+        git clone https://github.com/ASSERT-KTH/tawasco tawasco
+
+        # Insall wasm-tools
+        wget -O wasm-tools.gz https://github.com/Jacarte/tawasco/releases/download/0.1.4/wasm-tools-all-x86_64-linux-0.1.4.gz
+        wget -O stacking.gz https://github.com/Jacarte/tawasco/releases/download/1.4.5/stacking-all-x86_64-linux-1.4.5.gz
+
+        wget -q -O wasmtime.gz https://github.com/Jacarte/tawasco/releases/download/0.1.8/wasmtime-x86_64-linux-0.1.8.gz || exit 1
+
+        rm -rf ./wasmtime || true
+
+        7z x wasmtime.gz || exit 1
+        chmod +x wasmtime
+        mv wasmtime /usr/local/bin/wasmtime
+        wasmtime --version || exit 1
+
+        7z x stacking.gz
+        chmod +x stacking
+        mv stacking /usr/local/bin/stacking
+
+        RANDOM=7878
+
+        mkdir -p variants
+
+        function stack(){
+            
+            INPUT=$1
+            FOLDER=$2
+            ITER=$3
+            SEED=$4
+            if [[  -f $FOLDER/bin.$ITER.$SEED.999.wasm ]]
+            then
+                echo "Already stacked"
+                return
+            fi
+            COUNT=1000
+            # report-only-if-diff-mc
+            RUST_LOG=wasm_mutate=debug stacking $INPUT $FOLDER/bin.$ITER.$SEED --check-mem --seed $SEED -c $COUNT -v $COUNT --check-io 2> $FOLDER/bin.$ITER.$SEED.log.txt
+            
+            rm $FOLDER/bin.$ITER.$SEED.0.wasm
+            rm $FOLDER/bin.$ITER.$SEED.wasm
+
+            ls -R $FOLDER
+
+            # Execute it just to see
+            echo wasmtime run --invoke _start --dir . $FOLDER/bin.$ITER.$SEED.999.wasm
+            wasmtime run --invoke _start --dir . $FOLDER/bin.$ITER.$SEED.999.wasm
+            EXITCODE=$?
+
+            if [[ $EXITCODE -eq 0 ]]
+            then
+                echo "Valid"
+            else
+                echo "Invalid" $INPUT
+                exit 1
+            fi
+        }
+
+        #download_stacking
+
+
+        w=tawasco/experiments/wasmbench/ran/{{inputs.parameters.file}}.wasm
+
+        mkdir -p variants/$(basename $w)
+        ls /        
+        for i in $(seq 1 50)
+        do
+            echo $w
+            SEED=$RANDOM
+            stack $w variants/$(basename $w) $i $SEED
+            cp $w variants/$(basename $w)/original.wasm
+
+        done
+
+        # Mirror the variants folder

@@ -1,0 +1,134 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: wasm-mutate-1-
+spec:
+  entrypoint: per-file
+  parallelism: 50
+  templates:
+  - name: per-file
+    steps:
+    - - name: select-file
+        template: wasm-mutate-template
+        arguments:
+          parameters:
+            - name: file
+              value: "{{ item.file }}"
+        withItems:
+          - { file: "01fc1bcf0957d51633f99345f821111f57ea37486f7f7dfbb9b346b52ee5e46f"}
+
+
+          # Add the others here
+
+  - name: wasm-mutate-template
+    # activeDeadlineSeconds: 36000
+    retryStrategy:
+      limit: 2
+    inputs:
+
+      parameters:
+      - name: file
+      
+    outputs:
+      artifacts:
+      - name: perf
+        path: /perf.txt
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: 137.135.188.207:9000
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "/variants/perf/{{inputs.parameters.file}}.perf.csv"
+          accessKeySecret:
+            name: argo-artifacts-extr
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts-extr
+            key: secretkey
+      - name: out
+        path: /out.txt
+        archive:
+          none: {}
+        s3:
+          bucket: wasm-mutate
+          endpoint: 137.135.188.207:9000
+          insecure: true
+          # Avoid to mount the full metas_filtered folder in the container
+          key: "/variants/perf/{{inputs.parameters.file}}.out.txt"
+          accessKeySecret:
+            name: argo-artifacts-extr
+            key: accesskey
+          secretKeySecret:
+            name: argo-artifacts-extr
+            key: secretkey
+    script:
+      image: jacarte/wm-image:latest
+      command: [bash]
+      env:
+      - name: MINIOPASS  # name of env var
+        valueFrom:
+          secretKeyRef:
+            name: argo-artifacts-extr    # name of an existing k8s secret
+            key: secretkey     # 'key' subcomponent of the secret
+      resources:
+        requests:
+          memory: "10G"
+          cpu: 3
+      source: |
+
+        cd /
+
+        sleep 30
+        # install minio mc
+        mkdir -p $HOME/minio-binaries
+        wget -O $HOME/minio-binaries/mc https://github.com/ASSERT-KTH/tawasco/releases/download/1.5.1/mc
+        ls
+        echo "======"
+        chmod +x $HOME/minio-binaries/mc
+        export PATH=$PATH:$HOME/minio-binaries/
+
+
+        mc config host add exp http://137.135.188.207:9000 minio ${MINIOPASS}
+        # check the output, if exist, then exit
+        mc ls "exp/wasm-mutate/variants/real_world/{{inputs.parameters.file}}.wasm"
+        echo =============================
+
+        mkdir -p /variants
+        mc mirror --overwrite "exp/wasm-mutate/variants/real_world/{{inputs.parameters.file}}.wasm" /variants
+        
+
+
+        # Install 7z deps
+        apt-get update && apt-get install -y p7zip-full curl git
+        
+        wget -O bench.gz https://github.com/Jacarte/tawasco/releases/download/1.5.1/bench-all-x86_64-linux-1.5.1.gz
+
+        7z x bench.gz
+        chmod +x bench
+        mv bench /usr/local/bin/bench
+
+
+        function execute(){
+            I=$1
+            O=$2
+            LOG=$3
+
+            ../../host_based/target/release/bench  --count 100 --discard 20 $I 1>>$LOG 2>>$O
+            echo "-================================-" >> $LOG
+        }
+
+        echo "Name,Wsize,MCSize,CPTime,Extime" > /perf.txt
+        touch /out.txt
+        for f in $(ls variants)
+        do
+            echo $f
+            if [[ $f == *.wasm ]]
+            then
+                echo "Executing $f"
+                execute variants/$f /perf.txt  /out.txt
+            fi
+        done
+      
+        # Execute each Wasm in the variants folder, then collect the results
