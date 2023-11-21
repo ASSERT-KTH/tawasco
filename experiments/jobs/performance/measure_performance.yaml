@@ -115,7 +115,7 @@ spec:
             O=$2
             LOG=$3
 
-            ../../host_based/target/release/bench  --count 100 --discard 20 $I 1>>$LOG 2>>$O
+            bench  --count 100 --discard 20 $I 1>>$LOG 2>>$O
             echo "-================================-" >> $LOG
         }
 
