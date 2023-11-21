@@ -220,14 +220,14 @@ impl Stacking {
 
         let config = sled::Config::default()
             .path(cache_dir.clone().to_owned())
-            .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
+            .cache_capacity(/* 4Gb */ 1 * 512 * 1024 * 1024);
 
 
         let config2 = sled::Config::default()
             .path(format!("{}.mc", cache_dir.clone().to_owned()))
-            .cache_capacity(/* 4Gb */ 1 * 1024 * 1024 * 1024);
+            .cache_capacity(/* 4Gb */ 1 * 512 * 1024 * 1024);
 
-        let original_state = if check_io {
+        let original_state = 
             match eval::execute_single(&current, check_args.clone(), fuel, true, true) {
                 Some(it) => {
                     eprintln!("Original time {}ns", it.6.as_nanos());
@@ -235,12 +235,9 @@ impl Stacking {
                 }
                 None => {
                     eprintln!("Could not execute the original");
-                    process::exit(1);
+                    None
                 } 
-            }
-        } else {
-            None
-        };
+            };
 
         Self {
             original: current.clone(),
@@ -299,162 +296,162 @@ impl Stacking {
 
                                 continue;
                             }
+                            if self.check_io {
+                                
+                                if  let Some(original_state) = &self.original_state {
+                                    match eval::assert_same_evaluation(
+                                        &self.original,
+                                        &b,
+                                        self.check_args.clone(),
+                                        self.fuel,
+                                        self.check_mem,
+                                        self.args_generator.clone()
+                                    ) {
+                                        Some(st) => {
+                                            // The val is the value is the wasm + the hash of the previous one
+                                            let val =
+                                                vec![self.index.to_le_bytes().to_vec(), b.clone()]
+                                                    .concat();
+                                            let _ = self
+                                                .hashes
+                                                .insert(hash, val)
+                                                .expect("Failed to insert");
 
-                            if let Some(original_state) = &self.original_state {
-                                match eval::assert_same_evaluation(
-                                    &self.original,
-                                    &b,
-                                    self.check_args.clone(),
-                                    self.fuel,
-                                    self.check_mem,
-                                    self.args_generator.clone()
-                                ) {
-                                    Some(st) => {
-                                        // The val is the value is the wasm + the hash of the previous one
-                                        let val =
-                                            vec![self.index.to_le_bytes().to_vec(), b.clone()]
-                                                .concat();
-                                        let _ = self
-                                            .hashes
-                                            .insert(hash, val)
-                                            .expect("Failed to insert");
+                                            // Execute to see semantic equivalence
 
-                                        // Execute to see semantic equivalence
+                                            if self.chaos_mode {
+                                                // TODO if chaos mode...select from the DB ?
+                                                let random_item =
+                                                    self.rnd.gen_range(0..self.hashes.len());
 
-                                        if self.chaos_mode {
-                                            // TODO if chaos mode...select from the DB ?
-                                            let random_item =
-                                                self.rnd.gen_range(0..self.hashes.len());
+                                                match self.hashes.iter().take(random_item).next() {
+                                                    Some(random_item) => {
+                                                        match random_item {
+                                                            Ok(random_item) => {
+                                                                let k = random_item.0;
+                                                                // eprintln!("Random key {:?} out of {}", k, self.hashes.len());
+                                                                let random_curr = random_item.1;
+                                                                // The val is the value is the wasm + the index in le bytes
+                                                                let index = random_curr[0..8].to_vec();
+                                                                let wasm = random_curr[8..].to_vec();
+                                                                self.current = (
+                                                                    wasm,
+                                                                    usize::from_le_bytes(
+                                                                        index
+                                                                            .as_slice()
+                                                                            .try_into()
+                                                                            .unwrap(),
+                                                                    ),
+                                                                );
+                                                                self.index = self.current.1 + 1;
 
-                                            match self.hashes.iter().take(random_item).next() {
-                                                Some(random_item) => {
-                                                    match random_item {
-                                                        Ok(random_item) => {
-                                                            let k = random_item.0;
-                                                            // eprintln!("Random key {:?} out of {}", k, self.hashes.len());
-                                                            let random_curr = random_item.1;
-                                                            // The val is the value is the wasm + the index in le bytes
-                                                            let index = random_curr[0..8].to_vec();
-                                                            let wasm = random_curr[8..].to_vec();
-                                                            self.current = (
-                                                                wasm,
-                                                                usize::from_le_bytes(
-                                                                    index
-                                                                        .as_slice()
-                                                                        .try_into()
-                                                                        .unwrap(),
-                                                                ),
-                                                            );
-                                                            self.index = self.current.1 + 1;
-
-                                                            eprintln!(
-                                                                "=== CHAOS {}",
-                                                                self.index - 1
-                                                            );
-                                                            eprintln!(
-                                                                "=== CHAOS COUNT {}",
-                                                                self.hashes.len()
-                                                            );
-                                                            // Generate the file here already
-                                                            chaos_cb(
-                                                                &b,
-                                                                &origwasm,
-                                                                self.hashes.len(),
-                                                            );
-                                                            continue;
-                                                        }
-                                                        Err(e) => {
-                                                            eprintln!("Error {}", e);
-                                                            // We could not mutate the wasm, we skip it
-                                                            continue;
+                                                                eprintln!(
+                                                                    "=== CHAOS {}",
+                                                                    self.index - 1
+                                                                );
+                                                                eprintln!(
+                                                                    "=== CHAOS COUNT {}",
+                                                                    self.hashes.len()
+                                                                );
+                                                                // Generate the file here already
+                                                                chaos_cb(
+                                                                    &b,
+                                                                    &origwasm,
+                                                                    self.hashes.len(),
+                                                                );
+                                                                continue;
+                                                            }
+                                                            Err(e) => {
+                                                                eprintln!("Error {}", e);
+                                                                // We could not mutate the wasm, we skip it
+                                                                continue;
+                                                            }
                                                         }
                                                     }
+                                                    None => continue,
+                                                };
+                                            } else {
+                                                self.current = (b.clone(), self.index + 1);
+                                                self.index += 1;
+
+                                                if self.index % 10000 == 9999 {
+                                                    eprintln!("{} mutations", self.index);
                                                 }
-                                                None => continue,
-                                            };
-                                        } else {
-                                            self.current = (b.clone(), self.index + 1);
-                                            self.index += 1;
 
-                                            if self.index % 10000 == 9999 {
-                                                eprintln!("{} mutations", self.index);
+                                                eprintln!("=== TRANSFORMED {}", self.index);
+
+                                                if self.index % self.step == 0 {
+                                                    // Call the cb
+                                                    chaos_cb(&b, &origwasm, self.index);
+                                                }
+                                                break;
                                             }
-
-                                            eprintln!("=== TRANSFORMED {}", self.index);
-
-                                            if self.index % self.step == 0 {
-                                                // Call the cb
-                                                chaos_cb(&b, &origwasm, self.index);
-                                            }
-                                            break;
                                         }
+                                        None => {}
                                     }
-                                    None => {}
+                                } else {
+                                    unreachable!();
                                 }
                             } else {
                                 eprintln!("Not initial state");
-                                if !self.check_io {
-                                    if self.chaos_mode {
-                                        // TODO if chaos mode...select from the DB ?
-                                        let random_item = self.rnd.gen_range(0..self.hashes.len());
+                                if self.chaos_mode {
+                                    // TODO if chaos mode...select from the DB ?
+                                    let random_item = self.rnd.gen_range(0..self.hashes.len());
 
-                                        match self.hashes.iter().take(random_item).next() {
-                                            Some(random_item) => {
-                                                match random_item {
-                                                    Ok(random_item) => {
-                                                        let k = random_item.0;
-                                                        // eprintln!("Random key {:?} out of {}", k, self.hashes.len());
-                                                        let random_curr = random_item.1;
-                                                        // The val is the value is the wasm + the index in le bytes
-                                                        let index = random_curr[0..8].to_vec();
-                                                        let wasm = random_curr[8..].to_vec();
-                                                        self.current = (
-                                                            wasm,
-                                                            usize::from_le_bytes(
-                                                                index
-                                                                    .as_slice()
-                                                                    .try_into()
-                                                                    .unwrap(),
-                                                            ),
-                                                        );
-                                                        self.index = self.current.1 + 1;
+                                    match self.hashes.iter().take(random_item).next() {
+                                        Some(random_item) => {
+                                            match random_item {
+                                                Ok(random_item) => {
+                                                    let k = random_item.0;
+                                                    // eprintln!("Random key {:?} out of {}", k, self.hashes.len());
+                                                    let random_curr = random_item.1;
+                                                    // The val is the value is the wasm + the index in le bytes
+                                                    let index = random_curr[0..8].to_vec();
+                                                    let wasm = random_curr[8..].to_vec();
+                                                    self.current = (
+                                                        wasm,
+                                                        usize::from_le_bytes(
+                                                            index
+                                                                .as_slice()
+                                                                .try_into()
+                                                                .unwrap(),
+                                                        ),
+                                                    );
+                                                    self.index = self.current.1 + 1;
 
-                                                        eprintln!("=== CHAOS {}", self.index - 1);
-                                                        eprintln!(
-                                                            "=== CHAOS COUNT {}",
-                                                            self.hashes.len()
-                                                        );
-                                                        // Generate the file here already
-                                                        chaos_cb(&b, &origwasm, self.hashes.len());
-                                                        continue;
-                                                    }
-                                                    Err(e) => {
-                                                        eprintln!("Error {}", e);
-                                                        // We could not mutate the wasm, we skip it
-                                                        continue;
-                                                    }
+                                                    eprintln!("=== CHAOS {}", self.index - 1);
+                                                    eprintln!(
+                                                        "=== CHAOS COUNT {}",
+                                                        self.hashes.len()
+                                                    );
+                                                    // Generate the file here already
+                                                    chaos_cb(&b, &origwasm, self.hashes.len());
+                                                    continue;
+                                                }
+                                                Err(e) => {
+                                                    eprintln!("Error {}", e);
+                                                    // We could not mutate the wasm, we skip it
+                                                    continue;
                                                 }
                                             }
-                                            None => continue,
-                                        };
-                                    } else {
-                                        self.current = (b.clone(), self.index + 1);
-                                        self.index += 1;
-
-                                        if self.index % 10000 == 9999 {
-                                            eprintln!("{} mutations", self.index);
                                         }
-
-                                        eprintln!("=== TRANSFORMED {}", self.index);
-
-                                        if self.index % self.step == 0 {
-                                            // Call the cb
-                                            chaos_cb(&b, &origwasm, self.index);
-                                        }
-                                        break;
-                                    }
+                                        None => continue,
+                                    };
                                 } else {
-                                    panic!("To check IO the original state must be set (the original  program should be executable)");
+                                    self.current = (b.clone(), self.index + 1);
+                                    self.index += 1;
+
+                                    if self.index % 10000 == 9999 {
+                                        eprintln!("{} mutations", self.index);
+                                    }
+
+                                    eprintln!("=== TRANSFORMED {}", self.index);
+
+                                    if self.index % self.step == 0 {
+                                        // Call the cb
+                                        chaos_cb(&b, &origwasm, self.index);
+                                    }
+                                    break;
                                 }
                             }
                         }
@@ -563,13 +560,17 @@ fn main() -> Result<(), anyhow::Error> {
     }
     let mut C = 0;
 
-    let original_hash = blake3::hash(
-        &stack
-            .original_state
-            .clone()
-            .expect("Original state could not be retrieved")
-            .7,
-    );
+    let original_hash = match &stack.original_state {
+        Some(t) => {
+            blake3::hash(
+                &t.clone().7
+            )
+        }
+        None => {
+            println!("Original state not found, we use the hash of the empty state");
+            blake3::hash(String::from("empty").as_bytes())
+        }
+    }; 
     // The timer starts
     let mut stat = Stat::new();
     let stat = std::cell::RefCell::new(stat);

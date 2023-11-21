@@ -10,5 +10,6 @@ members = [
   'fuzz',
   'stacking',
   'tracer',
-  'host'
+  'host',
+  'bench'
 ]
