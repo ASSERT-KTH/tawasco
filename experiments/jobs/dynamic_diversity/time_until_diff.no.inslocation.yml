@@ -438,10 +438,6 @@ spec:
            - { file: "Luhn_test_of_credit_card_numbers.c" }
            - { file: "Check_output_device_is_a_terminal.c" }
 
-
-
-          # Add the others here
-
   - name: wasm-mutate-template
     # activeDeadlineSeconds: 36000
     retryStrategy:
@@ -479,7 +475,7 @@ spec:
           endpoint: 137.135.188.207:9000
           insecure: true
           # Avoid to mount the full metas_filtered folder in the container
-          key: "/traces_until_oracle_no_location/{{inputs.parameters.file}}/"
+          key: "/traces_until_oracle_no_location.50/{{inputs.parameters.file}}/"
           accessKeySecret:
             name: argo-artifacts-extr
             key: accesskey
@@ -590,8 +586,8 @@ spec:
           # TIME=10800
 
           # Download the oracles
-          wget -O /oracle_diff_trace_ins.sh https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/jobs/dynamic_diversity/oracle_diff_trace_ins.sh
-          wget -O /oracle_diff_trace_mem.sh https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/jobs/dynamic_diversity/oracle_diff_trace_mem.sh
+          wget -O /oracle_diff_trace_ins.sh https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/jobs/dynamic_diversity/oracle_diff_trace_ins_no_loc.sh
+          wget -O /oracle_diff_trace_mem.sh https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/jobs/dynamic_diversity/oracle_diff_trace_mem.th.sh
 
           # First we execute the original wasm
 
@@ -611,7 +607,7 @@ spec:
             cp trace.ins.txt out_trace/stacking.$seed.ins.txt
 
             echo $seed "Mem"
-            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.mem.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 3  --check-io --oracle "/bin/bash /oracle_diff_trace_mem.sh orig.mem.txt" --remove-cache --save-compiling --report-only-if-diff-mc
+            RUST_LOG=wasm_mutate=debug  stacking "out/{{inputs.parameters.file}}.wasm" "out/stacking.$seed.mem.wasm" --seed $seed --count 1000000 -v 1 --chaos-mode --variants-per-parent 3  --check-io --oracle "/bin/bash /oracle_diff_trace_mem.sh orig.mem.txt 50.0" --remove-cache --save-compiling --report-only-if-diff-mc
             # Save the last trace
             cp trace.mem.txt out_trace/stacking.$seed.mem.txt
           done

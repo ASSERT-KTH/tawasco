@@ -4,7 +4,7 @@ metadata:
   generateName: wasm-collect-traces-mem-1-
 spec:
   entrypoint: per-file
-  parallelism: 16
+  parallelism: 30
   templates:
   - name: per-file
     steps:
@@ -45,30 +45,129 @@ spec:
           # - { file: "Spiral_matrix.c" }
           # - { file: "Deconvolution-2D+.c" }
           # - { file: "Bell_numbers.c" }
-          - { file: "Sorting_algorithms-Cocktail_sort.c" }
-          - { file: "Fibonacci_n-step_number_sequences.c" }
-          - { file: "Emirp_primes.c" }
-          - { file: "Type_detection.c" }
-          - { file: "Truncatable_primes.c" }
-          - { file: "Sort_numbers_lexicographically.c" }
-          - { file: "Price_fraction.c" }
-          - { file: "Yin_and_yang.c" }
-          - { file: "Man_or_boy_test.c" }
-          - { file: "Stable_marriage_problem.c" }
-          - { file: "Amicable_pairs.c" }
-          - { file: "Sorting_algorithms-Insertion_sort.c" }
-          - { file: "Totient_function.c" }
-          - { file: "The_ISAAC_Cipher.c" }
-          - { file: "Evolutionary_algorithm.c" }
-          - { file: "Sorting_algorithms-Selection_sort.c" }
-          - { file: "String_interpolation_(included).c" }
-          - { file: "Permutation_test.c" }
-          - { file: "Levenshtein_distance-Alignment.c" }
-          - { file: "Zebra_puzzle.c" }
-          - { file: "Middle_three_digits.c" }
-          - { file: "Heronian_triangles.c" }
-          - { file: "Maximum_triangle_path_sum.c" }
-          - { file: "Magic_squares_of_singly_even_order.c" }
+
+          - { file: "The_Name_Game.c" }
+          - { file: "Execute_a_Markov_algorithm.c" }
+          - { file: "Josephus_problem.c" }
+          - { file: "Integer_roots.c" }
+          - { file: "String_concatenation.c" }
+          - { file: "URL_encoding.c" }
+          - { file: "Sparkline_in_unicode.c" }
+          - { file: "Strip_whitespace_from_a_string-Top_and_tail.c" }
+          - { file: "Day_of_the_week.c" }
+          - { file: "Best_shuffle.c" }
+          - { file: "Sequence_of_non-squares.c" }
+          - { file: "Vector.c" }
+          - { file: "Dot_product.c" }
+          - { file: "Test_integerness.c" }
+          - { file: "Hofstadter_Q_sequence.c" }
+          - { file: "Numerical_integration-Adaptive_Simpsons_method.c" }
+          - { file: "Accumulator_factory.c" }
+          - { file: "Linear_congruential_generator.c" }
+          - { file: "Literals-Integer.c" }
+          - { file: "Sum_data_type.c" }
+          - { file: "Least_common_multiple.c" }
+          - { file: "Null_object.c" }
+          - { file: "Fast_Fourier_transform.c" }
+          - { file: "Display_a_linear_combination.c" }
+          - { file: "Tokenize_a_string_with_escaping.c" }
+          - { file: "Write_language_name_in_3D_ASCII.c" }
+          - { file: "Roman_numerals-Encode.c" }
+          - { file: "Phrase_reversals.c" }
+          - { file: "String_prepend.c" }
+          - { file: "Matrix_chain_multiplication.c" }
+          - { file: "Calendar.c" }
+          - { file: "ISBN13_check_digit.c" }
+          - { file: "Strip_control_codes_and_extended_characters_from_a_string.c" }
+          - { file: "Square_but_not_cube.c" }
+          - { file: "Sexy_primes.c" }
+          - { file: "Chebyshev_coefficients.c" }
+          - { file: "Exponentiation_order.c" }
+          - { file: "Factors_of_an_integer.c" }
+          - { file: "Subtractive_generator.c" }
+          - { file: "Exceptions-Catch_an_exception_thrown_in_a_nested_call.c" }
+          - { file: "Deconvolution-1D.c" }
+          - { file: "Diversity_prediction_theorem.c" }
+          - { file: "Extreme_floating_point_values.c" }
+          - { file: "Circles_of_given_radius_through_two_points.c" }
+          - { file: "Old_Russian_measure_of_length.c" }
+          - { file: "Feigenbaum_constant_calculation.c" }
+          - { file: "List_rooted_trees.c" }
+          - { file: "Parsing-RPN_calculator_algorithm.c" }
+          - { file: "Inverted_syntax.c" }
+          - { file: "Set_of_real_numbers.c" }
+          - { file: "Ternary_logic.c" }
+          - { file: "Rep-string.c" }
+          - { file: "Parametric_polymorphism.c" }
+          - { file: "Semiprime.c" }
+          - { file: "Babbage_problem.c" }
+          - { file: "Multiplication_tables.c" }
+          - { file: "Loop_over_multiple_arrays_simultaneously.c" }
+          - { file: "Determinant_and_permanent.c" }
+          - { file: "Hash_from_two_arrays.c" }
+          - { file: "Balanced_brackets.c" }
+          - { file: "Formal_power_series.c" }
+          - { file: "Reduced_row_echelon_form.c" }
+          - { file: "Zeckendorf_number_representation.c" }
+          - { file: "Van_der_Corput_sequence.c" }
+          - { file: "Permutations_by_swapping.c" }
+          - { file: "Digital_root.c" }
+          - { file: "Stem-and-leaf_plot.c" }
+          - { file: "Create_an_HTML_table.c" }
+          - { file: "State_name_puzzle.c" }
+          - { file: "Top_rank_per_group.c" }
+          - { file: "String_case.c" }
+          - { file: "Hello_world-Newline_omission.c" }
+          - { file: "Multifactorial.c" }
+          - { file: "Check_input_device_is_a_terminal.c" }
+          - { file: "Record_sound.c" }
+          - { file: "Deepcopy.c" }
+          - { file: "Cheryls_Birthday.c" }
+          - { file: "AKS_test_for_primes.c" }
+          - { file: "Print_debugging_statement.c" }
+          - { file: "Cramers_rule.c" }
+          - { file: "Knights_tour.c" }
+          - { file: "Dijkstras_algorithm.c" }
+          - { file: "Environment_variables.c" }
+          - { file: "Thieles_interpolation_formula.c" }
+          - { file: "Thue-Morse.c" }
+          - { file: "Caesar_cipher.c" }
+          - { file: "Integer_overflow.c" }
+          - { file: "Show_Ascii_table.c" }
+          - { file: "JortSort.c" }
+          - { file: "Egyptian_division.c" }
+          - { file: "P-value_correction.c" }
+          - { file: "Roman_numerals-Decode.c" }
+          - { file: "Determine_if_a_string_has_all_the_same_characters.c" }
+          - { file: "Holidays_related_to_Easter.c" }
+          - { file: "Topological_sort.c" }
+          - { file: "Number_names.c" }
+          - { file: "Hello_world-Text.c" }
+          - { file: "McNuggets_Problem.c" }
+          - { file: "Attractive_numbers.c" }
+          - { file: "Sudoku.c" }
+          - { file: "Sum_digits_of_an_integer.c" }
+          - { file: "CSV_to_HTML_translation.c" }
+          - { file: "Probabilistic_choice.c" }
+          - { file: "Cycle_detection.c" }
+          - { file: "Terminal_control-Ringing_the_terminal_bell.c" }
+          - { file: "Program_name.c" }
+          - { file: "Population_count.c" }
+          - { file: "Hello_world-Standard_error.c" }
+          - { file: "Formatted_numeric_output.c" }
+          - { file: "Euler_method.c" }
+          - { file: "Harshad_or_Niven_series.c" }
+          - { file: "Determine_if_a_string_has_all_unique_characters.c" }
+          - { file: "Terminal_control-Unicode_output.c" }
+          - { file: "Sequence:_smallest_number_with_exactly_n_divisors.c" }
+          # Substring.c Could not compile
+          - { file: "Substring.c" }
+          - { file: "Find_the_intersection_of_a_line_with_a_plane.c" }
+          - { file: "Visualize_a_tree.c" }
+          - { file: "Run-length_encoding.c" }
+          - { file: "Cantor_set.c" }
+          - { file: "Priority_queue.c" }
+          - { file: "Pascals_triangle-Puzzle.c" }
           - { file: "Floyds_triangle.c" }
           - { file: "Horners_rule_for_polynomial_evaluation.c" }
           - { file: "Non-decimal_radices-Output.c" }
@@ -114,31 +213,37 @@ spec:
           - { file: "Damm_algorithm.c" }
           - { file: "General_FizzBuzz.c" }
           - { file: "String_matching.c" }
-          - { file: "The_Name_Game.c" }
-          - { file: "Execute_a_Markov_algorithm.c" }
-          - { file: "Josephus_problem.c" }
-          - { file: "Integer_roots.c" }
-          - { file: "String_concatenation.c" }
-          - { file: "URL_encoding.c" }
-          - { file: "Sparkline_in_unicode.c" }
-          - { file: "Strip_whitespace_from_a_string-Top_and_tail.c" }
-          - { file: "Day_of_the_week.c" }
-          - { file: "Best_shuffle.c" }
-          - { file: "Sequence_of_non-squares.c" }
-          - { file: "Vector.c" }
-          - { file: "Dot_product.c" }
-          - { file: "Test_integerness.c" }
-          - { file: "Hofstadter_Q_sequence.c" }
-          - { file: "Numerical_integration-Adaptive_Simpsons_method.c" }
-          - { file: "Accumulator_factory.c" }
-          - { file: "Linear_congruential_generator.c" }
-          - { file: "Literals-Integer.c" }
-          - { file: "Sum_data_type.c" }
-          - { file: "Least_common_multiple.c" }
-          - { file: "Null_object.c" }
-          - { file: "Fast_Fourier_transform.c" }
-          - { file: "Display_a_linear_combination.c" }
-          - { file: "Tokenize_a_string_with_escaping.c" }
+         
+          - { file: "Longest_increasing_subsequence.c" }
+          - { file: "Idiomatically_determine_all_the_lowercase_and_uppercase_letters.c" }
+          - { file: "Sierpinski_triangle.c" }
+          - { file: "Sort_an_array_of_composite_structures.c" }
+          - { file: "Water_collected_between_towers.c" }
+          - { file: "Sorting_algorithms-Cocktail_sort.c" }
+          - { file: "Fibonacci_n-step_number_sequences.c" }
+          - { file: "Emirp_primes.c" }
+          - { file: "Type_detection.c" }
+          - { file: "Truncatable_primes.c" }
+          - { file: "Sort_numbers_lexicographically.c" }
+          - { file: "Price_fraction.c" }
+          - { file: "Yin_and_yang.c" }
+          - { file: "Man_or_boy_test.c" }
+          - { file: "Stable_marriage_problem.c" }
+          - { file: "Amicable_pairs.c" }
+          - { file: "Sorting_algorithms-Insertion_sort.c" }
+          - { file: "Totient_function.c" }
+          - { file: "The_ISAAC_Cipher.c" }
+          - { file: "Evolutionary_algorithm.c" }
+          - { file: "Sorting_algorithms-Selection_sort.c" }
+          - { file: "String_interpolation_(included).c" }
+          - { file: "Permutation_test.c" }
+          - { file: "Levenshtein_distance-Alignment.c" }
+          - { file: "Zebra_puzzle.c" }
+          - { file: "Middle_three_digits.c" }
+          - { file: "Heronian_triangles.c" }
+          - { file: "Maximum_triangle_path_sum.c" }
+          - { file: "Magic_squares_of_singly_even_order.c" }
+          
           - { file: "Split_a_character_string_based_on_change_of_character.c" }
           - { file: "Currying.c" }
           - { file: "Mutual_recursion.c" }
@@ -329,108 +434,7 @@ spec:
           - { file: "Evaluate_binomial_coefficients.c" }
           - { file: "Luhn_test_of_credit_card_numbers.c" }
           - { file: "Check_output_device_is_a_terminal.c" }
-          - { file: "Water_collected_between_towers.c" }
-          - { file: "Ternary_logic.c" }
-          - { file: "Rep-string.c" }
-          - { file: "Parametric_polymorphism.c" }
-          - { file: "Semiprime.c" }
-          - { file: "Babbage_problem.c" }
-          - { file: "Multiplication_tables.c" }
-          - { file: "Loop_over_multiple_arrays_simultaneously.c" }
-          - { file: "Determinant_and_permanent.c" }
-          - { file: "Hash_from_two_arrays.c" }
-          - { file: "Balanced_brackets.c" }
-          - { file: "Formal_power_series.c" }
-          - { file: "Reduced_row_echelon_form.c" }
-          - { file: "Zeckendorf_number_representation.c" }
-          - { file: "Van_der_Corput_sequence.c" }
-          - { file: "Permutations_by_swapping.c" }
-          - { file: "Digital_root.c" }
-          - { file: "Stem-and-leaf_plot.c" }
-          - { file: "Create_an_HTML_table.c" }
-          - { file: "State_name_puzzle.c" }
-          - { file: "Top_rank_per_group.c" }
-          - { file: "String_case.c" }
-          - { file: "Hello_world-Newline_omission.c" }
-          - { file: "Multifactorial.c" }
-          - { file: "Check_input_device_is_a_terminal.c" }
-          - { file: "Record_sound.c" }
-          - { file: "Deepcopy.c" }
-          - { file: "Cheryls_Birthday.c" }
-          - { file: "AKS_test_for_primes.c" }
-          - { file: "Print_debugging_statement.c" }
-          - { file: "Cramers_rule.c" }
-          - { file: "Knights_tour.c" }
-          - { file: "Dijkstras_algorithm.c" }
-          - { file: "Environment_variables.c" }
-          - { file: "Thieles_interpolation_formula.c" }
-          - { file: "Thue-Morse.c" }
-          - { file: "Diversity_prediction_theorem.c" }
-          - { file: "Extreme_floating_point_values.c" }
-          - { file: "Circles_of_given_radius_through_two_points.c" }
-          - { file: "Old_Russian_measure_of_length.c" }
-          - { file: "Feigenbaum_constant_calculation.c" }
-          - { file: "List_rooted_trees.c" }
-          - { file: "Parsing-RPN_calculator_algorithm.c" }
-          - { file: "Inverted_syntax.c" }
-          - { file: "Set_of_real_numbers.c" }
-          - { file: "Longest_increasing_subsequence.c" }
-          - { file: "Idiomatically_determine_all_the_lowercase_and_uppercase_letters.c" }
-          - { file: "Sierpinski_triangle.c" }
-          - { file: "Sort_an_array_of_composite_structures.c" }
-          - { file: "Caesar_cipher.c" }
-          - { file: "Integer_overflow.c" }
-          - { file: "Show_Ascii_table.c" }
-          - { file: "JortSort.c" }
-          - { file: "Egyptian_division.c" }
-          - { file: "P-value_correction.c" }
-          - { file: "Roman_numerals-Decode.c" }
-          - { file: "Determine_if_a_string_has_all_the_same_characters.c" }
-          - { file: "Holidays_related_to_Easter.c" }
-          - { file: "Topological_sort.c" }
-          - { file: "Number_names.c" }
-          - { file: "Hello_world-Text.c" }
-          - { file: "McNuggets_Problem.c" }
-          - { file: "Attractive_numbers.c" }
-          - { file: "Sudoku.c" }
-          - { file: "Sum_digits_of_an_integer.c" }
-          - { file: "CSV_to_HTML_translation.c" }
-          - { file: "Probabilistic_choice.c" }
-          - { file: "Cycle_detection.c" }
-          - { file: "Terminal_control-Ringing_the_terminal_bell.c" }
-          - { file: "Program_name.c" }
-          - { file: "Population_count.c" }
-          - { file: "Hello_world-Standard_error.c" }
-          - { file: "Formatted_numeric_output.c" }
-          - { file: "Euler_method.c" }
-          - { file: "Harshad_or_Niven_series.c" }
-          - { file: "Determine_if_a_string_has_all_unique_characters.c" }
-          - { file: "Terminal_control-Unicode_output.c" }
-          - { file: "Sequence:_smallest_number_with_exactly_n_divisors.c" }
-          # Substring.c Could not compile
-          - { file: "Substring.c" }
-          - { file: "Find_the_intersection_of_a_line_with_a_plane.c" }
-          - { file: "Visualize_a_tree.c" }
-          - { file: "Run-length_encoding.c" }
-          - { file: "Cantor_set.c" }
-          - { file: "Priority_queue.c" }
-          - { file: "Pascals_triangle-Puzzle.c" }
-          - { file: "Write_language_name_in_3D_ASCII.c" }
-          - { file: "Roman_numerals-Encode.c" }
-          - { file: "Phrase_reversals.c" }
-          - { file: "String_prepend.c" }
-          - { file: "Matrix_chain_multiplication.c" }
-          - { file: "Calendar.c" }
-          - { file: "ISBN13_check_digit.c" }
-          - { file: "Strip_control_codes_and_extended_characters_from_a_string.c" }
-          - { file: "Square_but_not_cube.c" }
-          - { file: "Sexy_primes.c" }
-          - { file: "Chebyshev_coefficients.c" }
-          - { file: "Exponentiation_order.c" }
-          - { file: "Factors_of_an_integer.c" }
-          - { file: "Subtractive_generator.c" }
-          - { file: "Exceptions-Catch_an_exception_thrown_in_a_nested_call.c" }
-          - { file: "Deconvolution-1D.c" }
+          
 
 
           # Add the others here
@@ -438,7 +442,7 @@ spec:
   - name: wasm-mutate-template
     # activeDeadlineSeconds: 36000
     retryStrategy:
-      limit: 10
+      limit: 2
     inputs:
 
       parameters:
@@ -458,6 +462,7 @@ spec:
         privileged: true
         capabilities:
           add:
+            - SYS_PTRACE
             - SYS_ADMIN
       resources:
         requests:
@@ -469,7 +474,7 @@ spec:
 
         # install minio mc
         mkdir -p $HOME/minio-binaries
-        wget -O $HOME/minio-binaries/mc https://dl.min.io/client/mc/release/linux-amd64/mc
+        wget -q -O $HOME/minio-binaries/mc https://dl.min.io/client/mc/release/linux-amd64/mc
         ls
         echo "======"
         chmod +x $HOME/minio-binaries/mc
@@ -480,11 +485,12 @@ spec:
         mc config host add exp http://137.135.188.207:9000 minio ${MINIOPASS}
 
         # Install 7z deps
-        apt-get update && apt-get install -y p7zip-full curl
+        apt-get update && apt-get install -y p7zip-full curl python3 unzip
       
         # Insall wasm-tools
-        wget -O wasm-tools.gz https://github.com/Jacarte/tawasco/releases/download/0.1.4/wasm-tools-all-x86_64-linux-0.1.4.gz
-        wget -O stacking.gz https://github.com/Jacarte/tawasco/releases/download/0.2/stacking-all-x86_64-linux-0.2.gz
+        wget -q -O wasm-tools.gz https://github.com/Jacarte/tawasco/releases/download/1.0.0/wasm-tools-all-x86_64-linux-1.0.0.gz
+
+        wget -q -O stacking.gz https://github.com/Jacarte/tawasco/releases/download/0.2/stacking-all-x86_64-linux-0.2.gz
 
         7z x stacking.gz
         chmod +x stacking
@@ -493,12 +499,13 @@ spec:
         # Extract wasm-tools
         7z x wasm-tools.gz
         chmod +x wasm-tools
+        ls -lah wasm-tools
         mv wasm-tools /usr/local/bin/wasm-tools
 
         ls -la /usr/local/bin
         wasm-tools --version || exit 1
 
-        wget -O wasmtime.gz https://github.com/Jacarte/tawasco/releases/download/0.1.8/wasmtime-x86_64-linux-0.1.8.gz || exit 1
+        wget -q -O wasmtime.gz https://github.com/Jacarte/tawasco/releases/download/0.1.8/wasmtime-x86_64-linux-0.1.8.gz || exit 1
 
         rm -rf ./wasmtime || true
 
@@ -508,18 +515,28 @@ spec:
         wasmtime --version || exit 1
 
 
-        wget -O host_single.gz https://github.com/Jacarte/tawasco/releases/download/0.1.9/host_single-x86_64-linux-0.1.9.gz
-        7z x host_single.gz
-        chmod +x host_single
-        mv host_single /usr/local/bin/host_single
+        wget -q -O tracer.gz https://github.com/Jacarte/tawasco/releases/download/1.3.0/tracer-x86_64-linux-1.3.0.gz
+        7z x tracer.gz
+        chmod +x tracer
+        mv tracer /usr/local/bin/tracer
 
-        export PIN_ROOT=/opt/pin-3.15-98253-gb56e429b1-gcc-linux
+        wget -q -O pintool.gz  https://github.com/Jacarte/tawasco/releases/download/1.3.0/pintool-linux.gz 
+        tar -xvf pintool.gz
+        ls /host_based
+
+        export PIN_ROOT=/host_based/tracer/pintool/pin
+
+        # Download test wasm 
+        wget -q -O test.wasm https://github.com/Jacarte/tawasco/raw/main/host_based/tracer/tests/wasms/wb_challenge.wasm
+        /host_based/tracer/pintool/pin/pin -t /host_based/tracer/pintool/obj-intel64/tracer.so -i 0 -m 1 -c 0 -b 0 -o tmp.mem.txt -- tracer test.wasm
+        # cat tmp.mem.txt
+
 
         echo minio:${MINIOPASS} > ~/.passwd-s3fs
         chmod 600 ~/.passwd-s3fs
 
         mkdir -p /variants
-        wget https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
+        wget -q https://github.com/kahing/goofys/releases/download/v0.24.0/goofys
         chmod +x goofys
         mv goofys /usr/local/bin/
         mkdir -p ~/.aws
@@ -527,63 +544,88 @@ spec:
         echo "aws_access_key_id = minio" >> ~/.aws/credentials
         echo "aws_secret_access_key = ${MINIOPASS}" >> ~/.aws/credentials
 
-        echo "AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY=${MINIOPASS} goofys --endpoint http://137.135.188.207:9000 wasm-mutate:variants_raw_1h/{{inputs.parameters.file}} /variants"
+        # echo "AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY=${MINIOPASS} goofys --endpoint http://137.135.188.207:9000 wasm-mutate:variants_raw_1h/{{inputs.parameters.file}} /variants"
 
-        AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY="${MINIOPASS}" goofys --http-timeout 120s -o allow_other --endpoint http://137.135.188.207:9000 "wasm-mutate:variants_raw_1h/{{inputs.parameters.file}}" /variants
+        # AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY="${MINIOPASS}" goofys --http-timeout 120s -o allow_other --endpoint http://137.135.188.207:9000 "wasm-mutate:variants_raw_1h/{{inputs.parameters.file}}" /variants
 
-        sleep 5
+        # sleep 5
+        mkdir -p /variants
+
+        # download 100 random files 
+        cd /variants
+           URLENCODER=$(python3 -c "import urllib.parse; print(urllib.parse.quote('{{inputs.parameters.file}}'))")
+           wget -T 3000 --header="Key: MYLittleS3cret" -q -O variants.zip "http://137.135.188.207:8000/?folder=$URLENCODER"
+           unzip variants.zip
+           ls .
+        cd ..
+
         find '/variants' -name '*.wasm' | wc -l || exit 1
         
         ls /variants | wc -l
 
 
         mkdir -p /rq2
-        AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY="${MINIOPASS}" goofys --http-timeout 120s -o allow_other --endpoint http://137.135.188.207:9000 wasm-mutate:rq2/traces_all/{{inputs.parameters.file}} /rq2
+        # AWS_ACCESS_KEY_ID=minio AWS_SECRET_ACCESS_KEY="${MINIOPASS}" goofys --http-timeout 120s -o allow_other --endpoint http://137.135.188.207:9000 wasm-mutate:rq2/traces_all/{{inputs.parameters.file}} /rq2 || exit 1
 
-        sleep 2
+
+        # sleep 2
         # s3fs wasm-mutate /variants -o url=http://137.135.188.207:9000 -o use_path_request_style
 
-        mkdir -p "/rq2"
-
+        # mkdir -p "/rq2"
+        echo 0 | tee /proc/sys/kernel/randomize_va_space
+        ulimit -s unlimited
         I=0
         TH=100
 
+        # Installing nodejs
+        #curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        #apt install -y nodejs
+        #node --version || exit 1
 
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt install -y nodejs
-        node --version || exit 1
+        #mkdir -p /js
+        #cd /js
+        #wget -q -O index.js https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/index.js
+        #cd ..
 
-        mkdir -p /js
-        cd /js
-        wget -O index.js https://raw.githubusercontent.com/Jacarte/tawasco/main/experiments/scripts/index.js
-        cd ..
-
+        echo 0 | tee /proc/sys/kernel/randomize_va_space
+        echo 0 | tee /proc/sys/kernel/yama/ptrace_scope
+        mkdir -p /results
+        mkdir -p /shas
         while IFS= read -r -d $'\n' v 
         do
           NAME=$(basename "$v")
           echo "$NAME"
           
           # check if the trace file exist in the bucket
-          if [ -f "/rq2/$NAME.log.mem.txt" ]
-          then
-              echo "$NAME Already mem traced. Skip"
+          #if [ -f "/rq2/$NAME.log.mem.txt" ]
+          #if [[ $(mc ls "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.out.txt" | wc -l) -gt 0 ]]
+          #then
+          #    echo "$NAME Already mem traced. Skip"
               # Check the number of oracles ?
-              continue
-          fi
+          #    continue
+          #fi
           
           # Download the file
           # mc cp "exp/wasm-mutate/variants_raw_11h/{{inputs.parameters.file}}/$v" $v
           # Copy the bin to a local tmp
           cp "$v" tmp.wasm
-          host_single tmp.wasm
+          # host_single tmp.wasm
           # Log memory traces
 
-          /usr/local/bin/Tracer -i 0 -m 1 -c 0 -b 0 -f 4 -o tmp.mem.txt -- host_single tmp.wasm
-          /usr/local/bin/Tracer -i 1 -m 0 -c 1 -b 1 -f 4 -o tmp.ins.txt -- host_single tmp.wasm
+          /host_based/tracer/pintool/pin/pin -t /host_based/tracer/pintool/obj-intel64/tracer.so -i 0 -m 1 -M 0 -c 0 -b 0  -o tmp.mem.txt -- tracer tmp.wasm
+          /host_based/tracer/pintool/pin/pin -t /host_based/tracer/pintool/obj-intel64/tracer.so -i 1 -m 0 -c 1 -b 1  -o tmp.ins.txt -- tracer tmp.wasm
           ls tmp.ins.txt
-          cp tmp.ins.txt "/rq2/$NAME.ins.txt"
+          #cp tmp.ins.txt "/rq2/$NAME.ins.txt"
           ls tmp.mem.txt
-          cp tmp.mem.txt "/rq2/$NAME.mem.txt"
+          #cp tmp.mem.txt "/rq2/$NAME.mem.txt"
+
+          cp tmp.ins.txt /results/"$NAME".ins.txt
+          cp tmp.mem.txt /results/"$NAME".mem.txt
+          sha256sum /results/"$NAME".mem.txt > /shas/"$NAME".mem.txt
+          sha256sum /results/"$NAME".ins.txt > /shas/"$NAME".ins.txt
+
+          # mc cp tmp.ins.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.ins.txt"
+          # mc cp tmp.mem.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.mem.txt"
 
           wasmtime compile tmp.wasm -o tmp.cwasm
           # Execute TH times 
@@ -595,21 +637,30 @@ spec:
           # Get the sha256 sum of the tmp.cwasm
           sha256sum tmp.cwasm > "$NAME".sha256.txt
           # Copy then the result
+          # mc cp "$NAME".times.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.times.txt"
+          # mc cp "$NAME".out.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.out.txt"
+          # mc cp "$NAME".sha256.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.sha256.txt"
 
-          cp "$NAME".times.txt "/rq2/$NAME.times.txt"
-          cp "$NAME".out.txt "/rq2/$NAME.out.txt"
-          cp "$NAME".sha256.txt "/rq2/$NAME.sha256.txt"
+          cp "$NAME".times.txt /results/"$NAME".times.txt
+          cp "$NAME".out.txt /results/"$NAME".out.txt
+          cp "$NAME".sha256.txt /results/"$NAME".sha256.txt
+          cp "$NAME".times.txt /shas/"$NAME".times.txt
+
+          # cp "$NAME".times.txt "/rq2/$NAME.times.txt"
+          # cp "$NAME".out.txt "/rq2/$NAME.out.txt"
+          # cp "$NAME".sha256.txt "/rq2/$NAME.sha256.txt"
 
           # We collect v8
-          rm /js/input.wasm || true
+          #rm /js/input.wasm || true
           
-          cp -i tmp.wasm /js/input.wasm
-          cd /js
-          node --print-code --no-liftoff index.js 2>&1 > code.v8.txt
-          cp code.v8.txt "/rq2/$NAME.v8.txt"
-          cd ..
+          ##cp -i tmp.wasm /js/input.wasm
+          #cd /js
+          #node --print-code --no-liftoff index.js 2>&1 > code.v8.txt
+          # MC copy
+          #mc cp code.v8.txt "exp/wasm-mutate/rq2/traces_all/{{inputs.parameters.file}}/$NAME.v8.txt"
+          #cd ..
 
-          I=$((I+1))
+          #I=$((I+1))
           # print I from 1000 to 1000
           if [[ $((I%1000)) -eq 0 ]]
           then
@@ -622,5 +673,18 @@ spec:
             break
           fi
 
+          # break
+
         done  < <(find "/variants" -name "*.wasm")
+
+        echo "================================================="
+        echo "================================================="
+        echo "================================================="
+        echo "================================================="
+        echo "================================================="
+        echo "Copying results to minio"
+        ls -lah /results
+
+        mc cp -r /results/ "exp/wasm-mutate/rq2/traces_all_v3/{{inputs.parameters.file}}/"
+        mc cp -r /shas/ "exp/wasm-mutate/rq2/traces_hashes/{{inputs.parameters.file}}/"
 

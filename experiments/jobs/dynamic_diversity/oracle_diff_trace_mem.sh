@@ -22,7 +22,7 @@ hash2=$(sha256sum "$trace_file" | cut -d ' ' -f 1)
 
 diffy=$(sim trace.mem.txt "$trace_file")
 echo "Sim mem" $diffy
-th=80.0
+th=50.0
 # check if the trace.ins.txt is the same as the trace_file, return 1 if they are the same
 # check the md5sum of the trace.ins.txt and trace_file
 # check if the md5sum is the same
